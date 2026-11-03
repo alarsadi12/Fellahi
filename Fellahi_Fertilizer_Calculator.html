@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176b45">
+<title>حاسبة التسميد المتطورة | فلاحي</title>
+<style>
+:root{--green:#176b45;--light:#eaf5ee;--ink:#183328;--muted:#63756b;--line:#dce8df;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:#f4f8f5;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.65}
+header{background:linear-gradient(135deg,#125638,#218455);color:#fff;padding:24px 16px 28px;text-align:center}
+header h1{margin:0 0 5px;font-size:25px}header p{margin:0;color:#e1f2e7;font-size:14px}
+main{max-width:760px;margin:18px auto;padding:0 13px 35px}
+.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;margin:13px 0;box-shadow:0 5px 18px #1833280a}
+h2{font-size:18px;margin:0 0 12px;color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:650;margin-bottom:5px}
+input,select{width:100%;padding:12px;border:1px solid #cbdacf;border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:15px;min-width:0}
+input:focus,select:focus{outline:2px solid #8ac7a4;border-color:var(--green)}
+.field{min-width:0}.hint{font-size:12px;color:var(--muted);margin-top:5px}
+button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer}
+.primary{background:var(--green);color:#fff;width:100%;margin-top:14px;font-size:16px}
+.secondary{background:var(--light);color:var(--green)}
+.langs{display:flex;justify-content:center;gap:8px;margin-top:15px}.langs button{background:#ffffff22;color:#fff;border:1px solid #ffffff66;padding:7px 13px}
+.result{display:none;background:#f0f8f2;border:1px solid #b9ddc5;border-radius:13px;padding:15px;margin-top:15px}
+.big{font-size:27px;font-weight:800;color:var(--green);line-height:1.3}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px}
+.stat small{display:block;color:var(--muted)}.stat strong{font-size:17px}
+.warning{background:#fff8e8;border:1px solid #f0d89a;color:#725316;border-radius:12px;padding:12px;font-size:13px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 15px 30px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:14px}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1 id="title">حاسبة التسميد المتطورة</h1>
+<p id="subtitle">احسب كمية السماد حسب المساحة والاحتياج الغذائي</p>
+<div class="langs">
+<button onclick="setLang('ar')">العربية</button><button onclick="setLang('fr')">Français</button><button onclick="setLang('en')">English</button>
+</div>
+</header>
+<main>
+<section class="card">
+<h2 id="section1">1. معلومات الحقل</h2>
+<div class="grid">
+<div class="field"><label id="cropLabel" for="crop">المحصول</label>
+<select id="crop"><option>الأفوكادو</option><option>الزيتون</option><option>الخروب</option><option>الطماطم</option><option>البطيخ الأحمر</option><option>الفلفل</option><option>محصول آخر</option></select></div>
+<div class="field"><label id="stageLabel" for="stage">مرحلة النمو</label>
+<select id="stage"><option>النمو الخضري</option><option>قبل الإزهار</option><option>الإزهار والعقد</option><option>نمو الثمار</option><option>بعد الجني / الراحة</option></select></div>
+<div class="field"><label id="areaLabel" for="area">مساحة الحقل</label><input id="area" type="number" min="0.0001" step="any" value="1"></div>
+<div class="field"><label id="unitLabel" for="unit">وحدة المساحة</label><select id="unit"><option value="ha">هكتار</option><option value="m2">متر مربع</option></select></div>
+</div>
+</section>
+<section class="card">
+<h2 id="section2">2. اختيار السماد</h2>
+<div class="grid">
+<div class="field"><label id="fertLabel" for="fert">نوع السماد</label>
+<select id="fert">
+<option value="urea">اليوريا 46-0-0</option>
+<option value="as">سلفات الأمونيوم 21-0-0</option>
+<option value="dap">DAP 18-46-0</option>
+<option value="map">MAP 11-52-0</option>
+<option value="tsp">سوبر فوسفات ثلاثي 0-46-0</option>
+<option value="kcl">كلوريد البوتاسيوم 0-0-60</option>
+<option value="sop">سلفات البوتاسيوم 0-0-50</option>
+<option value="custom">سماد بتركيبة أخرى</option>
+</select></div>
+<div class="field"><label id="nutrientLabel" for="nutrient">العنصر المراد حسابه</label>
+<select id="nutrient"><option value="n">الآزوت N</option><option value="p">الفوسفور P₂O₅</option><option value="k">البوتاسيوم K₂O</option></select></div>
+</div>
+<div class="grid" style="margin-top:12px">
+<div class="field"><label id="nLabel" for="nPct">نسبة N %</label><input id="nPct" type="number" min="0" max="100" step="0.1" value="46"></div>
+<div class="field"><label id="pLabel" for="pPct">نسبة P₂O₅ %</label><input id="pPct" type="number" min="0" max="100" step="0.1" value="0"></div>
+<div class="field"><label id="kLabel" for="kPct">نسبة K₂O %</label><input id="kPct" type="number" min="0" max="100" step="0.1" value="0"></div>
+<div class="field"><label id="needLabel" for="need">الاحتياج من العنصر (كغ/هكتار)</label><input id="need" type="number" min="0.01" step="any" value="50"></div>
+</div>
+<p class="hint" id="hint">يمكنك اختيار سماد جاهز أو إدخال نسب N-P₂O₅-K₂O المكتوبة على الكيس. أدخل الاحتياج الموصى به لكل هكتار.</p>
+</section>
+<section class="card">
+<h2 id="section3">3. تقسيم الكمية</h2>
+<div class="grid">
+<div class="field"><label id="splitsLabel" for="splits">عدد الدفعات</label><input id="splits" type="number" min="1" max="20" step="1" value="2"></div>
+<div class="field"><label id="methodLabel" for="method">طريقة الإضافة</label><select id="method"><option value="soil">مع التربة</option><option value="fertigation">مع مياه الري (التسميد)</option><option value="foliar">رش ورقي</option></select></div>
+</div>
+<button class="primary" id="calc" onclick="calculate()">احسب كمية السماد</button>
+<div class="result" id="result" aria-live="polite">
+<div id="resultTitle">الكمية المطلوبة من السماد</div>
+<div class="big" id="total">—</div>
+<div class="stats">
+<div class="stat"><small id="perHaLabel">لكل هكتار</small><strong id="perHa">—</strong></div>
+<div class="stat"><small id="perSplitLabel">في كل دفعة</small><strong id="perSplit">—</strong></div>
+<div class="stat"><small id="nutrientOutLabel">العنصر المحسوب</small><strong id="nutrientOut">—</strong></div>
+<div class="stat"><small id="areaOutLabel">المساحة المعتمدة</small><strong id="areaOut">—</strong></div>
+</div>
+<p class="hint" id="contribution"></p>
+</div>
+</section>
+<div class="warning" id="warning">تنبيه زراعي: هذه أداة حسابية وليست وصفة تسميد. أدخل الاحتياج بناءً على تحليل التربة/الماء أو توصية مهندس فلاحي. لا تجمع حسابات N وP وK بشكل مستقل دون احتساب مساهمة العناصر الأخرى في السماد، فقد يؤدي ذلك إلى الإفراط في التسميد. اتبع ملصق المنتج وقواعد السلامة.</div>
+</main>
+<footer>Fellahi · فلاحي</footer>
+<script>
+const products={
+urea:[46,0,0],as:[21,0,0],dap:[18,46,0],map:[11,52,0],tsp:[0,46,0],kcl:[0,0,60],sop:[0,0,50]
+};
+const translations={
+ar:{title:"حاسبة التسميد المتطورة",subtitle:"احسب كمية السماد حسب المساحة والاحتياج الغذائي",section1:"1. معلومات الحقل",crop:"المحصول",stage:"مرحلة النمو",area:"مساحة الحقل",unit:"وحدة المساحة",section2:"2. اختيار السماد",fert:"نوع السماد",nutrient:"العنصر المراد حسابه",n:"الآزوت N",p:"الفوسفور P₂O₅",k:"البوتاسيوم K₂O",nPct:"نسبة N %",pPct:"نسبة P₂O₅ %",kPct:"نسبة K₂O %",need:"الاحتياج من العنصر (كغ/هكتار)",hint:"يمكنك اختيار سماد جاهز أو إدخال نسب N-P₂O₅-K₂O المكتوبة على الكيس. أدخل الاحتياج الموصى به لكل هكتار.",section3:"3. تقسيم الكمية",splits:"عدد الدفعات",method:"طريقة الإضافة",calc:"احسب كمية السماد",result:"الكمية المطلوبة من السماد",perHa:"لكل هكتار",perSplit:"في كل دفعة",nutrientOut:"العنصر المحسوب",areaOut:"المساحة المعتمدة",warning:"تنبيه زراعي: هذه أداة حسابية وليست وصفة تسميد. أدخل الاحتياج بناءً على تحليل التربة/الماء أو توصية مهندس فلاحي. لا تجمع حسابات N وP وK بشكل مستقل دون احتساب مساهمة العناصر الأخرى في السماد، فقد يؤدي ذلك إلى الإفراط في التسميد. اتبع ملصق المنتج وقواعد السلامة.",cropNames:["الأفوكادو","الزيتون","الخروب","الطماطم","البطيخ الأحمر","الفلفل","محصول آخر"],stages:["النمو الخضري","قبل الإزهار","الإزهار والعقد","نمو الثمار","بعد الجني / الراحة"],units:["هكتار","متر مربع"],methods:["مع التربة","مع مياه الري (التسميد)","رش ورقي"],fertNames:["اليوريا 46-0-0","سلفات الأمونيوم 21-0-0","DAP 18-46-0","MAP 11-52-0","سوبر فوسفات ثلاثي 0-46-0","كلوريد البوتاسيوم 0-0-60","سلفات البوتاسيوم 0-0-50","سماد بتركيبة أخرى"],needFix:"أدخل احتياجاً أكبر من صفر ونسبة العنصر في السماد أكبر من صفر.",hectare:"هكتار",kg:"كغ"},
+fr:{title:"Calculateur avancé de fertilisation",subtitle:"Calculez la quantité d’engrais selon la surface et le besoin nutritif",section1:"1. Informations de la parcelle",crop:"Culture",stage:"Stade de croissance",area:"Surface",unit:"Unité de surface",section2:"2. Choix de l’engrais",fert:"Type d’engrais",nutrient:"Élément à calculer",n:"Azote N",p:"Phosphore P₂O₅",k:"Potassium K₂O",nPct:"Taux N %",pPct:"Taux P₂O₅ %",kPct:"Taux K₂O %",need:"Besoin nutritif (kg/ha)",hint:"Choisissez un engrais ou saisissez les teneurs N-P₂O₅-K₂O indiquées sur le sac. Saisissez le besoin recommandé par hectare.",section3:"3. Fractionnement",splits:"Nombre d’apports",method:"Mode d’application",calc:"Calculer la quantité",result:"Quantité d’engrais nécessaire",perHa:"Par hectare",perSplit:"Par apport",nutrientOut:"Élément calculé",areaOut:"Surface utilisée",warning:"Attention : outil de calcul, pas une prescription agronomique. Utilisez les besoins issus d’une analyse du sol/de l’eau ou d’un conseil agronomique. Ne cumulez pas séparément N, P et K sans tenir compte des éléments apportés par chaque engrais. Respectez l’étiquette et les consignes de sécurité.",cropNames:["Avocat","Olivier","Caroubier","Tomate","Pastèque","Poivron","Autre culture"],stages:["Croissance végétative","Avant floraison","Floraison et nouaison","Développement des fruits","Après récolte / repos"],units:["Hectare","Mètre carré"],methods:["Au sol","Par fertigation","Pulvérisation foliaire"],fertNames:["Urée 46-0-0","Sulfate d’ammonium 21-0-0","DAP 18-46-0","MAP 11-52-0","Superphosphate triple 0-46-0","Chlorure de potassium 0-0-60","Sulfate de potassium 0-0-50","Autre formulation"],needFix:"Saisissez un besoin supérieur à zéro et une teneur positive pour cet élément.",hectare:"ha",kg:"kg"},
+en:{title:"Advanced Fertilizer Calculator",subtitle:"Calculate fertilizer quantity from area and nutrient requirement",section1:"1. Field information",crop:"Crop",stage:"Growth stage",area:"Field area",unit:"Area unit",section2:"2. Fertilizer selection",fert:"Fertilizer type",nutrient:"Nutrient to calculate",n:"Nitrogen N",p:"Phosphorus P₂O₅",k:"Potassium K₂O",nPct:"N content %",pPct:"P₂O₅ content %",kPct:"K₂O content %",need:"Nutrient requirement (kg/ha)",hint:"Choose a preset fertilizer or enter the N-P₂O₅-K₂O analysis from the bag. Enter the recommended requirement per hectare.",section3:"3. Split applications",splits:"Number of applications",method:"Application method",calc:"Calculate fertilizer amount",result:"Required fertilizer quantity",perHa:"Per hectare",perSplit:"Per application",nutrientOut:"Calculated nutrient",areaOut:"Area used",warning:"Agronomic note: this is a calculator, not a fertilizer prescription. Use nutrient requirements from soil/water testing or a qualified agronomist. Do not calculate N, P and K independently without accounting for nutrients supplied by other fertilizers; this can cause over-fertilization. Follow the product label and safety instructions.",cropNames:["Avocado","Olive","Carob","Tomato","Watermelon","Pepper","Other crop"],stages:["Vegetative growth","Before flowering","Flowering and fruit set","Fruit development","After harvest / rest"],units:["Hectare","Square metre"],methods:["Soil application","Fertigation","Foliar spray"],fertNames:["Urea 46-0-0","Ammonium sulfate 21-0-0","DAP 18-46-0","MAP 11-52-0","Triple superphosphate 0-46-0","Potassium chloride 0-0-60","Potassium sulfate 0-0-50","Custom formulation"],needFix:"Enter a requirement above zero and a positive fertilizer percentage for the selected nutrient.",hectare:"ha",kg:"kg"}
+};
+let lang="ar";
+function setLang(l){
+ lang=l;const t=translations[l];document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";
+ const ids={title:"title",subtitle:"subtitle",section1:"section1",crop:"cropLabel",stage:"stageLabel",area:"areaLabel",unit:"unitLabel",section2:"section2",fert:"fertLabel",nutrient:"nutrientLabel",nPct:"nLabel",pPct:"pLabel",kPct:"kLabel",need:"needLabel",hint:"hint",section3:"section3",splits:"splitsLabel",method:"methodLabel",calc:"calc",result:"resultTitle",perHa:"perHaLabel",perSplit:"perSplitLabel",nutrientOut:"nutrientOutLabel",areaOut:"areaOutLabel",warning:"warning"};
+ Object.keys(ids).forEach(k=>document.getElementById(ids[k]).textContent=t[k]);
+ fillSelect("crop",t.cropNames);fillSelect("stage",t.stages);fillSelect("unit",t.units,["ha","m2"]);fillSelect("method",t.methods,["soil","fertigation","foliar"]);fillSelect("fert",t.fertNames,["urea","as","dap","map","tsp","kcl","sop","custom"]);
+ document.getElementById("nutrient").options[0].text=t.n;document.getElementById("nutrient").options[1].text=t.p;document.getElementById("nutrient").options[2].text=t.k;
+}
+function fillSelect(id,names,values){const s=document.getElementById(id),old=s.value;s.innerHTML="";names.forEach((n,i)=>{let o=document.createElement("option");o.textContent=n;o.value=values?values[i]:String(i);s.appendChild(o)});if(values&&values.includes(old))s.value=old;}
+document.getElementById("fert").addEventListener("change",()=>{const p=products[document.getElementById("fert").value];if(p){["nPct","pPct","kPct"].forEach((id,i)=>document.getElementById(id).value=p[i]);}});
+function calculate(){
+ const t=translations[lang],area=Number(document.getElementById("area").value),unit=document.getElementById("unit").value,ha=unit==="m2"?area/10000:area;
+ const nutrient=document.getElementById("nutrient").value,idx={n:0,p:1,k:2}[nutrient],pct=Number(document.getElementById(["nPct","pPct","kPct"][idx]).value),need=Number(document.getElementById("need").value),splits=Number(document.getElementById("splits").value);
+ if(!(area>0&&ha>0&&pct>0&&pct<=100&&need>0&&splits>=1&&splits<=20)){alert(t.needFix);return;}
+ const perHa=need/(pct/100),total=perHa*ha,each=total/splits;
+ const n=Number(document.getElementById("nPct").value),p=Number(document.getElementById("pPct").value),k=Number(document.getElementById("kPct").value);
+ document.getElementById("total").textContent=total.toLocaleString(undefined,{maximumFractionDigits:2})+" "+t.kg;
+ document.getElementById("perHa").textContent=perHa.toLocaleString(undefined,{maximumFractionDigits:2})+" "+t.kg;
+ document.getElementById("perSplit").textContent=each.toLocaleString(undefined,{maximumFractionDigits:2})+" "+t.kg;
+ document.getElementById("nutrientOut").textContent=need+" "+t.kg+"/"+t.hectare;
+ document.getElementById("areaOut").textContent=area.toLocaleString()+" "+(unit==="ha"?t.hectare:"m²");
+ document.getElementById("contribution").textContent=`N: ${(total*n/100).toFixed(2)} kg · P₂O₅: ${(total*p/100).toFixed(2)} kg · K₂O: ${(total*k/100).toFixed(2)} kg`;
+ document.getElementById("result").style.display="block";
+}
+window.setLanguage=setLang;
+</script>
+</body>
+</html>
