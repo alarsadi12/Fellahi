@@ -35,3 +35,10 @@
 - Interface direction changes automatically: RTL for Arabic, LTR for English and French.
 - Language choice is saved locally on the device.
 - This is initial interface localization; agricultural recommendations must be localized and validated for each region before use.
+
+
+## Fellahi Global 3.0 — Plant health check interface
+- Added a plant photo picker with local preview.
+- Added crop, country/region, and symptom fields.
+- Added Arabic, English, and French labels for the new screen.
+- This release does not perform AI diagnosis yet. A secure backend/API must be connected before image analysis can be offered. Do not present unverified guesses as diagnoses.

@@ -66,6 +66,7 @@ nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;backg
   <button class="action" data-go="water"><span class="ico">💧</span><strong>برنامج السقي</strong><span>سجل مواعيد السقي القادمة</span></button>
   <button class="action" data-go="crops"><span class="ico">🌿</span><strong>دليل المحاصيل</strong><span>معلومات أولية عن المحاصيل</span></button>
   <button class="action" data-go="plants"><span class="ico">🌳</span><strong>أشجاري ومحاصيلي</strong><span>احتفظ بسجل مزروعاتك</span></button>
+  <button class="action" data-go="diagnose"><span class="ico">🤖</span><strong>تشخيص النبات بالذكاء الاصطناعي</strong><span>صوّر النبات وأضف تفاصيل الأعراض</span></button>
  </div>
  <div class="section-head" style="margin-top:24px"><h2>نصيحة فلاحية</h2></div>
  <div class="card"><div style="font-size:25px">☀️</div><strong>راقب رطوبة التربة قبل السقي</strong><p class="hint" style="line-height:1.8">لا تعتمد على جدول ثابت وحده؛ احتياجات النبات تتغير حسب نوع التربة والطقس وعمر النبات ومرحلة النمو.</p></div>
@@ -109,7 +110,22 @@ nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;backg
  <p class="notice">المعلومات عامة وليست وصفة علاجية أو برنامج تسميد جاهزاً. التشخيص الدقيق يحتاج إلى صور واضحة وسياق زراعي وتحليل عند الضرورة.</p>
 </section>
 
-<section id="plants" class="panel">
+
+<section id="diagnose" class="panel">
+ <div class="section-head"><h2>🤖 تشخيص أمراض النباتات</h2><span class="hint">Fellahi AI</span></div>
+ <div class="card">
+  <p style="font-size:13px;line-height:1.8;margin-top:0">أضف صورة واضحة للنبات، وحدد المحصول ومكان الزراعة والأعراض. هذه الخطوة تجهّز بيانات الحالة للتحليل.</p>
+  <div class="field"><label for="diagphoto">صورة النبات أو الورقة</label><input id="diagphoto" type="file" accept="image/*" capture="environment"></div>
+  <img id="diagpreview" alt="معاينة الصورة" style="display:none;width:100%;max-height:260px;object-fit:contain;border-radius:14px;background:#f3f6f3;margin-top:8px">
+  <div class="field"><label for="diagcrop">نوع المحصول</label><input id="diagcrop" placeholder="مثال: طماطم، زيتون، أفوكادو"></div>
+  <div class="field"><label for="diagcountry">الدولة أو المنطقة</label><input id="diagcountry" placeholder="مثال: France, Morocco, India"></div>
+  <div class="field"><label for="diagsymptoms">صف الأعراض ومتى بدأت</label><input id="diagsymptoms" placeholder="مثال: بقع بنية على الأوراق منذ أسبوع"></div>
+  <button class="btn" id="diagprepare">تجهيز الحالة للتحليل</button>
+  <div class="result" id="diagresult" style="display:none"></div>
+  <p class="notice">تنبيه: رفع الصورة ومعاينتها يعملان داخل التطبيق، لكن التشخيص الفعلي بالذكاء الاصطناعي لم يُربط بعد. لن نقدّم تخميناً على أنه تشخيص مؤكد. تجنّب استخدام مبيد قبل التأكد من السبب وقراءة الملصق المحلي.</p>
+ </div>
+</section>
+\n<section id="plants" class="panel">
  <div class="section-head"><h2>🌳 أشجاري ومحاصيلي</h2><span class="hint">سجل محلي</span></div>
  <div class="card">
   <div class="field"><label>اسم النبات أو المحصول</label><input id="plantname" placeholder="مثال: شجرة أفوكادو رقم 1"></div>
@@ -131,9 +147,9 @@ nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;backg
 <script>
 
 const LANG = {
- ar:{dir:"rtl",welcome:"مرحبا بك في فلاحي 👋",sub:"كل ما تحتاجه للعناية بمحاصيلك في مكان واحد.",choose:"ماذا تريد أن تفعل؟",hint:"اختر خدمة",fert:"حاسبة الأسمدة",fertd:"احسب الكمية حسب المساحة والجرعة",water:"برنامج السقي",waterd:"سجل مواعيد السقي القادمة",plants:"أشجاري ومحاصيلي",plantsd:"احتفظ بسجل مزروعاتك",crops:"دليل المحاصيل",cropsd:"معلومات أولية عن المحاصيل",tip:"نصيحة فلاحية",tipt:"راقب رطوبة التربة قبل السقي",tipd:"لا تعتمد على جدول ثابت وحده؛ احتياجات النبات تتغير حسب نوع التربة والطقس وعمر النبات ومرحلة النمو.",home:"الرئيسية",fertnav:"الأسمدة",waternav:"السقي",plantsnav:"سجلي",calchead:"🧪 حاسبة الأسمدة",waterhead:"💧 سجل السقي",plantshead:"🌳 أشجاري ومحاصيلي",cropshead:"🌿 دليل المحاصيل",calc:"احسب كمية السماد",save:"حفظ الموعد",add:"إضافة إلى سجلي",datehead:"المواعيد المسجلة",listhead:"سجلي"},
- en:{dir:"ltr",welcome:"Welcome to Fellahi 👋",sub:"Everything you need to care for your crops in one place.",choose:"What would you like to do?",hint:"Choose a service",fert:"Fertilizer calculator",fertd:"Calculate quantity by area and rate",water:"Irrigation planner",waterd:"Record upcoming watering dates",plants:"My plants & crops",plantsd:"Keep a record of your plantings",crops:"Crop guide",cropsd:"Introductory crop information",tip:"Farming tip",tipt:"Check soil moisture before watering",tipd:"Do not rely on a fixed schedule alone. Water needs vary with soil, weather, plant age and growth stage.",home:"Home",fertnav:"Fertilizer",waternav:"Water",plantsnav:"My plants",calchead:"🧪 Fertilizer calculator",waterhead:"💧 Irrigation planner",plantshead:"🌳 My plants & crops",cropshead:"🌿 Crop guide",calc:"Calculate fertilizer quantity",save:"Save date",add:"Add to my records",datehead:"Saved dates",listhead:"My records"},
- fr:{dir:"ltr",welcome:"Bienvenue sur Fellahi 👋",sub:"Tout ce qu’il faut pour prendre soin de vos cultures au même endroit.",choose:"Que souhaitez-vous faire ?",hint:"Choisir un service",fert:"Calculateur d’engrais",fertd:"Calculer la quantité selon la surface et la dose",water:"Planification de l’irrigation",waterd:"Enregistrer les prochaines dates d’arrosage",plants:"Mes plantes et cultures",plantsd:"Suivre vos plantations",crops:"Guide des cultures",cropsd:"Informations générales sur les cultures",tip:"Conseil agricole",tipt:"Vérifiez l’humidité du sol avant d’arroser",tipd:"Ne vous fiez pas uniquement à un calendrier fixe. Les besoins varient selon le sol, la météo, l’âge et le stade de croissance.",home:"Accueil",fertnav:"Engrais",waternav:"Irrigation",plantsnav:"Mes plantes",calchead:"🧪 Calculateur d’engrais",waterhead:"💧 Planification de l’irrigation",plantshead:"🌳 Mes plantes et cultures",cropshead:"🌿 Guide des cultures",calc:"Calculer la quantité d’engrais",save:"Enregistrer la date",add:"Ajouter à mes dossiers",datehead:"Dates enregistrées",listhead:"Mes dossiers"}
+ ar:{dir:"rtl",welcome:"مرحبا بك في فلاحي 👋",sub:"كل ما تحتاجه للعناية بمحاصيلك في مكان واحد.",choose:"ماذا تريد أن تفعل؟",hint:"اختر خدمة",fert:"حاسبة الأسمدة",fertd:"احسب الكمية حسب المساحة والجرعة",water:"برنامج السقي",waterd:"سجل مواعيد السقي القادمة",plants:"أشجاري ومحاصيلي",plantsd:"احتفظ بسجل مزروعاتك",crops:"دليل المحاصيل",cropsd:"معلومات أولية عن المحاصيل",diag:"تشخيص النبات بالذكاء الاصطناعي",diagd:"صوّر النبات وأضف تفاصيل الأعراض",diaghead:"🤖 تشخيص أمراض النباتات",diagintro:"أضف صورة واضحة للنبات، وحدد المحصول ومكان الزراعة والأعراض. هذه الخطوة تجهّز بيانات الحالة للتحليل.",photolabel:"صورة النبات أو الورقة",croplabel:"نوع المحصول",countrylabel:"الدولة أو المنطقة",symptomlabel:"صف الأعراض ومتى بدأت",prepare:"تجهيز الحالة للتحليل",tip:"نصيحة فلاحية",tipt:"راقب رطوبة التربة قبل السقي",tipd:"لا تعتمد على جدول ثابت وحده؛ احتياجات النبات تتغير حسب نوع التربة والطقس وعمر النبات ومرحلة النمو.",home:"الرئيسية",fertnav:"الأسمدة",waternav:"السقي",plantsnav:"سجلي",calchead:"🧪 حاسبة الأسمدة",waterhead:"💧 سجل السقي",plantshead:"🌳 أشجاري ومحاصيلي",cropshead:"🌿 دليل المحاصيل",calc:"احسب كمية السماد",save:"حفظ الموعد",add:"إضافة إلى سجلي",datehead:"المواعيد المسجلة",listhead:"سجلي"},
+ en:{dir:"ltr",welcome:"Welcome to Fellahi 👋",sub:"Everything you need to care for your crops in one place.",choose:"What would you like to do?",hint:"Choose a service",fert:"Fertilizer calculator",fertd:"Calculate quantity by area and rate",water:"Irrigation planner",waterd:"Record upcoming watering dates",plants:"My plants & crops",plantsd:"Keep a record of your plantings",crops:"Crop guide",cropsd:"Introductory crop information",diag:"AI plant check",diagd:"Add a plant photo and describe symptoms",diaghead:"🤖 Plant health check",diagintro:"Add a clear photo, crop type, growing location and symptoms. This prepares the case for analysis.",photolabel:"Plant or leaf photo",croplabel:"Crop type",countrylabel:"Country or region",symptomlabel:"Describe symptoms and when they started",prepare:"Prepare case for analysis",tip:"Farming tip",tipt:"Check soil moisture before watering",tipd:"Do not rely on a fixed schedule alone. Water needs vary with soil, weather, plant age and growth stage.",home:"Home",fertnav:"Fertilizer",waternav:"Water",plantsnav:"My plants",calchead:"🧪 Fertilizer calculator",waterhead:"💧 Irrigation planner",plantshead:"🌳 My plants & crops",cropshead:"🌿 Crop guide",calc:"Calculate fertilizer quantity",save:"Save date",add:"Add to my records",datehead:"Saved dates",listhead:"My records"},
+ fr:{dir:"ltr",welcome:"Bienvenue sur Fellahi 👋",sub:"Tout ce qu’il faut pour prendre soin de vos cultures au même endroit.",choose:"Que souhaitez-vous faire ?",hint:"Choisir un service",fert:"Calculateur d’engrais",fertd:"Calculer la quantité selon la surface et la dose",water:"Planification de l’irrigation",waterd:"Enregistrer les prochaines dates d’arrosage",plants:"Mes plantes et cultures",plantsd:"Suivre vos plantations",crops:"Guide des cultures",cropsd:"Informations générales sur les cultures",diag:"Diagnostic IA des plantes",diagd:"Ajoutez une photo et décrivez les symptômes",diaghead:"🤖 Diagnostic de santé des plantes",diagintro:"Ajoutez une photo nette, le type de culture, la région et les symptômes. Ces informations préparent le dossier pour l’analyse.",photolabel:"Photo de la plante ou de la feuille",croplabel:"Type de culture",countrylabel:"Pays ou région",symptomlabel:"Décrivez les symptômes et leur début",prepare:"Préparer le dossier pour l’analyse",tip:"Conseil agricole",tipt:"Vérifiez l’humidité du sol avant d’arroser",tipd:"Ne vous fiez pas uniquement à un calendrier fixe. Les besoins varient selon le sol, la météo, l’âge et le stade de croissance.",home:"Accueil",fertnav:"Engrais",waternav:"Irrigation",plantsnav:"Mes plantes",calchead:"🧪 Calculateur d’engrais",waterhead:"💧 Planification de l’irrigation",plantshead:"🌳 Mes plantes et cultures",cropshead:"🌿 Guide des cultures",calc:"Calculer la quantité d’engrais",save:"Enregistrer la date",add:"Ajouter à mes dossiers",datehead:"Dates enregistrées",listhead:"Mes dossiers"}
 };
 function setLanguage(code){
  const t=LANG[code]||LANG.ar;
@@ -146,7 +162,7 @@ function setLanguage(code){
  const homeHints=document.querySelectorAll("#home .section-head .hint");
  if(homeHints[0])homeHints[0].textContent=t.hint;
  const actions=document.querySelectorAll(".action");
- const vals=[[t.fert,t.fertd],[t.water,t.waterd],[t.plants,t.plantsd],[t.crops,t.cropsd]];
+ const vals=[[t.fert,t.fertd],[t.water,t.waterd],[t.plants,t.plantsd],[t.crops,t.cropsd],[t.diag,t.diagd]];
  actions.forEach((a,i)=>{if(vals[i]){const s=a.querySelector("strong"),sp=a.querySelectorAll("span");if(s)s.textContent=vals[i][0];if(sp[1])sp[1].textContent=vals[i][1];}});
  if(homeHeads[1])homeHeads[1].textContent=t.tip;
  const tip=document.querySelector("#home .card");if(tip){put("#home .card strong",t.tipt);put("#home .card p",t.tipd);}
@@ -154,6 +170,12 @@ function setLanguage(code){
  [t.home,t.fertnav,t.waternav,t.plantsnav].forEach((v,i)=>{if(nav[i])nav[i].lastChild.textContent=v;});
  put("#fert .section-head h2",t.calchead);put("#water .section-head h2",t.waterhead);
  put("#plants .section-head h2",t.plantshead);put("#crops .section-head h2",t.cropshead);
+ put("#diagnose .section-head h2",t.diaghead);
+ const dput=(id,v)=>{const e=document.querySelector('label[for="'+id+'"]');if(e)e.textContent=v;};
+ dput("diagphoto",t.photolabel);dput("diagcrop",t.croplabel);dput("diagcountry",t.countrylabel);dput("diagsymptoms",t.symptomlabel);
+ const di=document.querySelector("#diagnose .card > p");if(di)di.textContent=t.diagintro;
+ put("#diagprepare",t.prepare);
+
  put("#calc",t.calc);put("#addwater",t.save);put("#addplant",t.add);
  const dateH=document.querySelector("#water .section-head:nth-of-type(2) h2");if(dateH)dateH.textContent=t.datehead;
  const listH=document.querySelector("#plants .section-head:nth-of-type(2) h2");if(listH)listH.textContent=t.listhead;
@@ -211,6 +233,35 @@ $('addplant').onclick=()=>{
  const arr=read('fellahi_plants');arr.push({name,age:$('plantage').value.trim(),note:$('plantnote').value.trim()});write('fellahi_plants',arr);
  $('plantname').value='';$('plantage').value='';$('plantnote').value='';renderPlants();
 };
+
+const diagPhoto = document.getElementById("diagphoto");
+diagPhoto.addEventListener("change",()=>{
+ const file=diagPhoto.files && diagPhoto.files[0];
+ const preview=document.getElementById("diagpreview");
+ if(!file){preview.style.display="none";preview.removeAttribute("src");return;}
+ if(!file.type.startsWith("image/")){alert("Please choose an image file.");diagPhoto.value="";return;}
+ if(file.size>8*1024*1024){alert("Please choose an image smaller than 8 MB.");diagPhoto.value="";return;}
+ const reader=new FileReader();
+ reader.onload=()=>{preview.src=reader.result;preview.style.display="block";};
+ reader.readAsDataURL(file);
+});
+document.getElementById("diagprepare").addEventListener("click",()=>{
+ const file=diagPhoto.files && diagPhoto.files[0];
+ const crop=document.getElementById("diagcrop").value.trim();
+ const country=document.getElementById("diagcountry").value.trim();
+ const symptoms=document.getElementById("diagsymptoms").value.trim();
+ const box=document.getElementById("diagresult");
+ if(!file||!crop||!country||!symptoms){alert("Please add a photo, crop type, country/region and symptoms.");return;}
+ box.style.display="block";
+ const lang=localStorage.getItem("fellahi_language")||"ar";
+ const messages={
+  ar:"تم تجهيز الحالة بنجاح على هذا الجهاز. واجهة رفع الصورة تعمل، لكن خدمة الذكاء الاصطناعي لم تُربط بعد؛ لذلك لم نصدر تشخيصاً أو علاجاً. الخطوة التالية هي ربط خادم آمن للتحليل.",
+  en:"Your case details are ready on this device. Photo selection works, but the AI analysis service is not connected yet, so no diagnosis or treatment has been generated. The next step is connecting a secure analysis backend.",
+  fr:"Votre dossier est prêt sur cet appareil. La sélection de photo fonctionne, mais le service d’analyse IA n’est pas encore connecté : aucun diagnostic ni traitement n’a été généré. La prochaine étape consiste à connecter un serveur d’analyse sécurisé."
+ };
+ box.textContent=messages[lang]||messages.ar;
+});
+
 renderWater();renderPlants();setLanguage(localStorage.getItem("fellahi_language")||"ar");
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
