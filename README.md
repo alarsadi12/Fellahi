@@ -28,3 +28,10 @@
 - البيانات محفوظة على نفس الجهاز والمتصفح فقط؛ حذف بيانات المتصفح قد يمحوها.
 - لا توجد مزامنة بين الأجهزة أو حسابات مستخدمين.
 - المحتوى الزراعي عام، ولا يقدم جرعات تسميد أو علاجاً شخصياً. يجب الرجوع لتحليل التربة والماء وملصق المنتج ومختص محلي.
+
+
+## Global edition update
+- Interface language selector: Arabic, English, French.
+- Interface direction changes automatically: RTL for Arabic, LTR for English and French.
+- Language choice is saved locally on the device.
+- This is initial interface localization; agricultural recommendations must be localized and validated for each region before use.

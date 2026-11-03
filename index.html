@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#176b45">
-<meta name="description" content="فلاحي - مساعدك الزراعي الذكي">
+<meta name="description" content="Fellahi - Smart Agriculture for Everyone">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>فلاحي | Fellahi</title>
+<title>Fellahi | Smart Agriculture for Everyone</title>
 <style>
 :root{--green:#176b45;--green2:#e8f4ed;--ink:#183329;--muted:#6e8077;--bg:#f5f8f5;--white:#fff;--line:#e3ebe5;--orange:#f4a340}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
@@ -49,7 +49,12 @@ nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;backg
 <header>
  <div class="top">
   <div class="brand"><div class="logo">🌱</div><div><h1>فلاحي</h1><p>Fellahi · مساعدك الزراعي</p></div></div>
-  <div class="date" id="today"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <select id="language" aria-label="Language" style="width:auto;max-width:112px;padding:7px 8px;border:1px solid #ffffff55;background:#ffffff18;color:white;border-radius:10px">
+      <option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option>
+    </select>
+    <div class="date" id="today"></div>
+    </div>
  </div>
  <div class="welcome">مرحبا بك في فلاحي 👋<small>كل ما تحتاجه للعناية بمحاصيلك في مكان واحد.</small></div>
 </header>
@@ -124,7 +129,39 @@ nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;backg
 </nav>
 </div>
 <script>
+
+const LANG = {
+ ar:{dir:"rtl",welcome:"مرحبا بك في فلاحي 👋",sub:"كل ما تحتاجه للعناية بمحاصيلك في مكان واحد.",choose:"ماذا تريد أن تفعل؟",hint:"اختر خدمة",fert:"حاسبة الأسمدة",fertd:"احسب الكمية حسب المساحة والجرعة",water:"برنامج السقي",waterd:"سجل مواعيد السقي القادمة",plants:"أشجاري ومحاصيلي",plantsd:"احتفظ بسجل مزروعاتك",crops:"دليل المحاصيل",cropsd:"معلومات أولية عن المحاصيل",tip:"نصيحة فلاحية",tipt:"راقب رطوبة التربة قبل السقي",tipd:"لا تعتمد على جدول ثابت وحده؛ احتياجات النبات تتغير حسب نوع التربة والطقس وعمر النبات ومرحلة النمو.",home:"الرئيسية",fertnav:"الأسمدة",waternav:"السقي",plantsnav:"سجلي",calchead:"🧪 حاسبة الأسمدة",waterhead:"💧 سجل السقي",plantshead:"🌳 أشجاري ومحاصيلي",cropshead:"🌿 دليل المحاصيل",calc:"احسب كمية السماد",save:"حفظ الموعد",add:"إضافة إلى سجلي",datehead:"المواعيد المسجلة",listhead:"سجلي"},
+ en:{dir:"ltr",welcome:"Welcome to Fellahi 👋",sub:"Everything you need to care for your crops in one place.",choose:"What would you like to do?",hint:"Choose a service",fert:"Fertilizer calculator",fertd:"Calculate quantity by area and rate",water:"Irrigation planner",waterd:"Record upcoming watering dates",plants:"My plants & crops",plantsd:"Keep a record of your plantings",crops:"Crop guide",cropsd:"Introductory crop information",tip:"Farming tip",tipt:"Check soil moisture before watering",tipd:"Do not rely on a fixed schedule alone. Water needs vary with soil, weather, plant age and growth stage.",home:"Home",fertnav:"Fertilizer",waternav:"Water",plantsnav:"My plants",calchead:"🧪 Fertilizer calculator",waterhead:"💧 Irrigation planner",plantshead:"🌳 My plants & crops",cropshead:"🌿 Crop guide",calc:"Calculate fertilizer quantity",save:"Save date",add:"Add to my records",datehead:"Saved dates",listhead:"My records"},
+ fr:{dir:"ltr",welcome:"Bienvenue sur Fellahi 👋",sub:"Tout ce qu’il faut pour prendre soin de vos cultures au même endroit.",choose:"Que souhaitez-vous faire ?",hint:"Choisir un service",fert:"Calculateur d’engrais",fertd:"Calculer la quantité selon la surface et la dose",water:"Planification de l’irrigation",waterd:"Enregistrer les prochaines dates d’arrosage",plants:"Mes plantes et cultures",plantsd:"Suivre vos plantations",crops:"Guide des cultures",cropsd:"Informations générales sur les cultures",tip:"Conseil agricole",tipt:"Vérifiez l’humidité du sol avant d’arroser",tipd:"Ne vous fiez pas uniquement à un calendrier fixe. Les besoins varient selon le sol, la météo, l’âge et le stade de croissance.",home:"Accueil",fertnav:"Engrais",waternav:"Irrigation",plantsnav:"Mes plantes",calchead:"🧪 Calculateur d’engrais",waterhead:"💧 Planification de l’irrigation",plantshead:"🌳 Mes plantes et cultures",cropshead:"🌿 Guide des cultures",calc:"Calculer la quantité d’engrais",save:"Enregistrer la date",add:"Ajouter à mes dossiers",datehead:"Dates enregistrées",listhead:"Mes dossiers"}
+};
+function setLanguage(code){
+ const t=LANG[code]||LANG.ar;
+ localStorage.setItem("fellahi_language",code);
+ document.documentElement.lang=code;document.documentElement.dir=t.dir;document.body.dir=t.dir;
+ const put=(s,v)=>{const e=document.querySelector(s);if(e)e.textContent=v;};
+ put(".welcome",t.welcome);put(".welcome small",t.sub);
+ const homeHeads=document.querySelectorAll("#home .section-head h2");
+ if(homeHeads[0])homeHeads[0].textContent=t.choose;
+ const homeHints=document.querySelectorAll("#home .section-head .hint");
+ if(homeHints[0])homeHints[0].textContent=t.hint;
+ const actions=document.querySelectorAll(".action");
+ const vals=[[t.fert,t.fertd],[t.water,t.waterd],[t.plants,t.plantsd],[t.crops,t.cropsd]];
+ actions.forEach((a,i)=>{if(vals[i]){const s=a.querySelector("strong"),sp=a.querySelectorAll("span");if(s)s.textContent=vals[i][0];if(sp[1])sp[1].textContent=vals[i][1];}});
+ if(homeHeads[1])homeHeads[1].textContent=t.tip;
+ const tip=document.querySelector("#home .card");if(tip){put("#home .card strong",t.tipt);put("#home .card p",t.tipd);}
+ const nav=document.querySelectorAll(".nav button");
+ [t.home,t.fertnav,t.waternav,t.plantsnav].forEach((v,i)=>{if(nav[i])nav[i].lastChild.textContent=v;});
+ put("#fert .section-head h2",t.calchead);put("#water .section-head h2",t.waterhead);
+ put("#plants .section-head h2",t.plantshead);put("#crops .section-head h2",t.cropshead);
+ put("#calc",t.calc);put("#addwater",t.save);put("#addplant",t.add);
+ const dateH=document.querySelector("#water .section-head:nth-of-type(2) h2");if(dateH)dateH.textContent=t.datehead;
+ const listH=document.querySelector("#plants .section-head:nth-of-type(2) h2");if(listH)listH.textContent=t.listhead;
+ document.getElementById("language").value=code;
+}
+
 const $=id=>document.getElementById(id);
+document.getElementById("language").addEventListener("change",e=>setLanguage(e.target.value));
 const today=new Date();
 $('today').textContent=today.toLocaleDateString('ar-MA',{year:'numeric',month:'short',day:'numeric'});
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
@@ -174,7 +211,7 @@ $('addplant').onclick=()=>{
  const arr=read('fellahi_plants');arr.push({name,age:$('plantage').value.trim(),note:$('plantnote').value.trim()});write('fellahi_plants',arr);
  $('plantname').value='';$('plantage').value='';$('plantnote').value='';renderPlants();
 };
-renderWater();renderPlants();
+renderWater();renderPlants();setLanguage(localStorage.getItem("fellahi_language")||"ar");
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body></html>
