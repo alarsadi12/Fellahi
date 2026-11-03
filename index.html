@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176b45">
+<meta name="description" content="فلاحي - مساعدك الزراعي الذكي">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>فلاحي | Fellahi</title>
+<style>
+:root{--green:#176b45;--green2:#e8f4ed;--ink:#183329;--muted:#6e8077;--bg:#f5f8f5;--white:#fff;--line:#e3ebe5;--orange:#f4a340}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:88px}
+header{background:linear-gradient(135deg,#12583a,#238454);color:white;padding:24px 20px 26px;border-radius:0 0 26px 26px}
+.top{display:flex;justify-content:space-between;align-items:center}.brand{display:flex;gap:10px;align-items:center}.logo{width:43px;height:43px;border-radius:14px;background:#ffffff20;display:grid;place-items:center;font-size:25px}
+h1{font-size:23px;margin:0}header p{margin:4px 0 0;color:#d9eee2;font-size:13px}
+.date{font-size:12px;color:#e2f1e7;background:#ffffff18;padding:8px 10px;border-radius:12px}
+.welcome{margin-top:24px;font-size:19px;font-weight:700}.welcome small{display:block;font-size:13px;font-weight:400;color:#d9eee2;margin-top:5px}
+main{padding:18px 16px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:7px 2px 13px}
+.section-head h2{font-size:17px;margin:0}.hint{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 4px 15px #173e2410}
+.action{min-height:125px;text-align:right;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);background:white;border-radius:18px;padding:15px;color:var(--ink)}
+.action:active,.nav button:active{transform:scale(.98)}.ico{width:43px;height:43px;border-radius:14px;background:var(--green2);display:grid;place-items:center;font-size:23px}
+.action strong{font-size:14px}.action span:last-child{font-size:11px;color:var(--muted)}
+.panel{display:none}.panel.active{display:block}.home.active{display:block}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:650}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline-color:var(--green)}
+.btn{border:0;background:var(--green);color:white;padding:12px 16px;border-radius:12px;font-weight:700;width:100%;margin-top:8px}
+.btn.secondary{background:var(--green2);color:var(--green)}
+.result{margin-top:14px;padding:14px;background:var(--green2);border-radius:14px;color:var(--green);font-weight:700;display:none}
+.item{padding:13px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}
+.item strong{display:block;font-size:14px}.item p{font-size:12px;color:var(--muted);margin:5px 0 0;line-height:1.7}
+.pill{display:inline-block;background:#fff3df;color:#925d13;border-radius:20px;padding:4px 9px;font-size:11px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.smallbtn{border:0;background:var(--green2);color:var(--green);padding:7px 10px;border-radius:9px;font-size:12px}
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+nav.nav{position:fixed;bottom:0;left:0;right:0;max-width:760px;margin:auto;background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:5}
+.nav button{border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;padding:5px}
+.nav button.active{color:var(--green);font-weight:800}.nav b{font-size:20px;font-weight:400}
+.notice{font-size:11px;line-height:1.7;color:var(--muted);margin-top:13px}
+@media(min-width:600px){main{padding:24px}.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="top">
+  <div class="brand"><div class="logo">🌱</div><div><h1>فلاحي</h1><p>Fellahi · مساعدك الزراعي</p></div></div>
+  <div class="date" id="today"></div>
+ </div>
+ <div class="welcome">مرحبا بك في فلاحي 👋<small>كل ما تحتاجه للعناية بمحاصيلك في مكان واحد.</small></div>
+</header>
+<main>
+<section id="home" class="panel home active">
+ <div class="section-head"><h2>ماذا تريد أن تفعل؟</h2><span class="hint">اختر خدمة</span></div>
+ <div class="grid">
+  <button class="action" data-go="fert"><span class="ico">🧪</span><strong>حاسبة الأسمدة</strong><span>احسب الكمية حسب المساحة والجرعة</span></button>
+  <button class="action" data-go="water"><span class="ico">💧</span><strong>برنامج السقي</strong><span>سجل مواعيد السقي القادمة</span></button>
+  <button class="action" data-go="crops"><span class="ico">🌿</span><strong>دليل المحاصيل</strong><span>معلومات أولية عن المحاصيل</span></button>
+  <button class="action" data-go="plants"><span class="ico">🌳</span><strong>أشجاري ومحاصيلي</strong><span>احتفظ بسجل مزروعاتك</span></button>
+ </div>
+ <div class="section-head" style="margin-top:24px"><h2>نصيحة فلاحية</h2></div>
+ <div class="card"><div style="font-size:25px">☀️</div><strong>راقب رطوبة التربة قبل السقي</strong><p class="hint" style="line-height:1.8">لا تعتمد على جدول ثابت وحده؛ احتياجات النبات تتغير حسب نوع التربة والطقس وعمر النبات ومرحلة النمو.</p></div>
+</section>
+
+<section id="fert" class="panel">
+ <div class="section-head"><h2>🧪 حاسبة الأسمدة</h2><span class="hint">حساب تقريبي</span></div>
+ <div class="card">
+  <div class="field"><label>مساحة الأرض (هكتار)</label><input id="area" type="number" min="0" step="0.01" placeholder="مثال: 0.5"></div>
+  <div class="field"><label>الجرعة الموصى بها (كغ/هكتار)</label><input id="dose" type="number" min="0" step="0.1" placeholder="مثال: 200"></div>
+  <div class="field"><label>اسم السماد (اختياري)</label><input id="fertname" placeholder="مثال: NPK 15-15-15"></div>
+  <button class="btn" id="calc">احسب كمية السماد</button>
+  <div class="result" id="fertresult"></div>
+  <p class="notice">هذه الحاسبة تنفذ العملية الحسابية فقط. لا تعتبر الجرعة المدخلة توصية زراعية. اختر الجرعة بناءً على تحليل التربة والمحصول وملصق المنتج وإرشاد مختص.</p>
+ </div>
+</section>
+
+<section id="water" class="panel">
+ <div class="section-head"><h2>💧 سجل السقي</h2><span class="hint">على هذا الهاتف</span></div>
+ <div class="card">
+  <div class="field"><label>اسم المحصول أو الحقل</label><input id="watercrop" placeholder="مثال: أشجار الزيتون"></div>
+  <div class="field"><label>موعد السقي القادم</label><input id="waterdate" type="date"></div>
+  <div class="field"><label>ملاحظة</label><input id="waternote" placeholder="مثال: تفقد رطوبة التربة"></div>
+  <button class="btn" id="addwater">حفظ الموعد</button>
+ </div>
+ <div class="section-head" style="margin-top:20px"><h2>المواعيد المسجلة</h2></div>
+ <div class="card" id="waterlist"></div>
+ <p class="notice">المواعيد تذكيرية فقط، ويجب تعديلها حسب الطقس ونوع التربة واحتياجات المحصول.</p>
+</section>
+
+<section id="crops" class="panel">
+ <div class="section-head"><h2>🌿 دليل المحاصيل</h2><span class="hint">معلومات تمهيدية</span></div>
+ <div class="card" id="croplist">
+  <div class="item"><strong>🥑 الأفوكادو</strong><p>يتأثر بتراكم الأملاح وسوء الصرف. راقب رطوبة التربة وتجنب التغريق، واضبط التسميد حسب تحليل التربة والماء.</p></div>
+  <div class="item"><strong>🫒 الزيتون</strong><p>يتحمل الجفاف نسبياً بعد التأسيس، لكن الري المنتظم في الفترات الحساسة قد يحسن النمو والإنتاج. التقليم يكون وفق عمر الشجرة وشكلها.</p></div>
+  <div class="item"><strong>🍅 الطماطم</strong><p>تحتاج إلى انتظام الري وتجنب التذبذب الشديد في رطوبة التربة. راقب الأوراق والثمار باستمرار لاكتشاف الأعراض مبكراً.</p></div>
+  <div class="item"><strong>🍉 البطيخ الأحمر</strong><p>يحتاج إلى توازن في الماء والتغذية، خصوصاً أثناء الإزهار وتكوين الثمار. تجنب الإفراط في الآزوت دون حاجة.</p></div>
+  <div class="item"><strong>🌶️ الفلفل</strong><p>يفضل ريّاً منتظماً وتربة جيدة الصرف. راقب علامات نقص العناصر أو الملوحة قبل إضافة الأسمدة.</p></div>
+  <div class="item"><strong>🌳 الخروب</strong><p>بعد التأسيس يصبح أكثر تحملاً للجفاف، لكن الأشجار الصغيرة تحتاج إلى عناية بالماء وإزالة الأعشاب حولها دون إيذاء الجذور.</p></div>
+ </div>
+ <p class="notice">المعلومات عامة وليست وصفة علاجية أو برنامج تسميد جاهزاً. التشخيص الدقيق يحتاج إلى صور واضحة وسياق زراعي وتحليل عند الضرورة.</p>
+</section>
+
+<section id="plants" class="panel">
+ <div class="section-head"><h2>🌳 أشجاري ومحاصيلي</h2><span class="hint">سجل محلي</span></div>
+ <div class="card">
+  <div class="field"><label>اسم النبات أو المحصول</label><input id="plantname" placeholder="مثال: شجرة أفوكادو رقم 1"></div>
+  <div class="field"><label>العمر أو تاريخ الغرس</label><input id="plantage" placeholder="مثال: 3 سنوات"></div>
+  <div class="field"><label>ملاحظات</label><input id="plantnote" placeholder="مثال: نمو جيد، آخر سقي أمس"></div>
+  <button class="btn" id="addplant">إضافة إلى سجلي</button>
+ </div>
+ <div class="section-head" style="margin-top:20px"><h2>سجلي</h2></div>
+ <div class="card" id="plantlist"></div>
+</section>
+</main>
+<nav class="nav">
+ <button class="active" data-go="home"><b>⌂</b>الرئيسية</button>
+ <button data-go="fert"><b>🧪</b>الأسمدة</button>
+ <button data-go="water"><b>💧</b>السقي</button>
+ <button data-go="plants"><b>🌳</b>سجلي</button>
+</nav>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const today=new Date();
+$('today').textContent=today.toLocaleDateString('ar-MA',{year:'numeric',month:'short',day:'numeric'});
+function read(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
+function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
+function showPanel(id){
+ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===id));
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPanel(b.dataset.go)));
+$('calc').addEventListener('click',()=>{
+ const a=Number($('area').value),d=Number($('dose').value),n=$('fertname').value.trim();
+ if(!(a>0)||!(d>=0)){alert('أدخل مساحة وجرعة صحيحتين.');return}
+ const kg=a*d;
+ $('fertresult').style.display='block';
+ $('fertresult').textContent=`${n?n+' · ':''}الكمية الحسابية: ${kg.toLocaleString('ar-MA',{maximumFractionDigits:2})} كغ`;
+});
+function renderWater(){
+ const items=read('fellahi_water');const box=$('waterlist');
+ box.innerHTML=items.length?'':'<div class="empty">لا توجد مواعيد مسجلة بعد.</div>';
+ items.sort((a,b)=>a.date.localeCompare(b.date)).forEach((x,i)=>{
+  const div=document.createElement('div');div.className='item';
+  const strong=document.createElement('strong');strong.textContent=x.crop+' — '+x.date;
+  const p=document.createElement('p');p.textContent=x.note||'بدون ملاحظة';
+  const btn=document.createElement('button');btn.className='smallbtn';btn.textContent='حذف';btn.onclick=()=>{const arr=read('fellahi_water');arr.splice(i,1);write('fellahi_water',arr);renderWater()};
+  div.append(strong,p,btn);box.append(div);
+ });
+}
+$('addwater').onclick=()=>{
+ const crop=$('watercrop').value.trim(),date=$('waterdate').value,note=$('waternote').value.trim();
+ if(!crop||!date){alert('أدخل اسم المحصول والموعد.');return}
+ const arr=read('fellahi_water');arr.push({crop,date,note});write('fellahi_water',arr);
+ $('watercrop').value='';$('waterdate').value='';$('waternote').value='';renderWater();
+};
+function renderPlants(){
+ const items=read('fellahi_plants'),box=$('plantlist');box.innerHTML=items.length?'':'<div class="empty">لم تضف أي نبات بعد.</div>';
+ items.forEach((x,i)=>{
+  const div=document.createElement('div');div.className='item';
+  const strong=document.createElement('strong');strong.textContent='🌱 '+x.name;
+  const p=document.createElement('p');p.textContent=[x.age,x.note].filter(Boolean).join(' · ')||'لا توجد تفاصيل';
+  const btn=document.createElement('button');btn.className='smallbtn';btn.textContent='حذف';btn.onclick=()=>{const arr=read('fellahi_plants');arr.splice(i,1);write('fellahi_plants',arr);renderPlants()};
+  div.append(strong,p,btn);box.append(div);
+ });
+}
+$('addplant').onclick=()=>{
+ const name=$('plantname').value.trim();if(!name){alert('أدخل اسم النبات.');return}
+ const arr=read('fellahi_plants');arr.push({name,age:$('plantage').value.trim(),note:$('plantnote').value.trim()});write('fellahi_plants',arr);
+ $('plantname').value='';$('plantage').value='';$('plantnote').value='';renderPlants();
+};
+renderWater();renderPlants();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
