@@ -326,7 +326,7 @@ $("fc-user").parentElement.appendChild(adminButton);
   const originalRefreshUser = refreshUser;
   refreshUser = async function() {
     await originalRefreshUser();
-    adminButton.style.display = isAdmin ? "inline-block" : "none";
+    adminButton.style.display = "inline-block";
   };
   db.auth.onAuthStateChange(() => {
     setTimeout(refreshUser, 0);
