@@ -263,11 +263,6 @@
       await loadPosts();
     });
   }
-
-  db.auth.onAuthStateChange(() => {
-    setTimeout(refreshUser, 0);
-  });
-  refreshUser();
     // لوحة تحكم المدير
   const adminButton = document.createElement("button");
   adminButton.className = "fc-btn";
@@ -333,4 +328,8 @@
     await originalRefreshUser();
     adminButton.style.display = isAdmin ? "inline-block" : "none";
   };
-})();
+  db.auth.onAuthStateChange(() => {
+    setTimeout(refreshUser, 0);
+  });
+
+  refreshUser();})();
