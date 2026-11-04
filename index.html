@@ -55,7 +55,7 @@
 <section id="ai" class="panel"><button class="back" data-go="home">رجوع</button><h2>🤖 المساعد الذكي</h2><div class="card"><div class="field"><label>سؤالك أو وصف الأعراض</label><textarea id="aq" placeholder="صف حالة النبات..."></textarea></div><div class="field"><label>صورة النبات (اختياري)</label><input id="aphoto" type="file" accept="image/*" capture="environment"></div><img id="apreview" class="preview"><button class="btn" id="asend">إرسال للمساعد</button><div id="aresult" class="result"></div><p class="note">المساعد يعطي احتمالات وإرشادات أولية، وليس تشخيصاً مخبرياً أو وصفة مبيد.</p></div></section>
 <footer class="note" style="text-align:center"><a href="./about.html">عن فلاحي</a> · <a href="./privacy.html">الخصوصية</a> · <a href="./contact.html">اتصل بنا</a><br>© Fellahi 2.0</footer></main><nav><button data-go="home"><b>⌂</b>الرئيسية</button><button data-go="fert"><b>🧪</b>التسميد</button><button data-go="water"><b>💧</b>السقي</button><button data-go="plants"><b>🌳</b>سجلي</button></nav></div>
 <script>
-const AI_API_URL="PUT_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+const AI_API_URL="https://fellahi-ai.teqnifilahi.workers.dev";
 const $=id=>document.getElementById(id);function go(id){document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===id));window.scrollTo(0,0)}document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 const drawer=$('drawer'),backdrop=$('drawerBackdrop');
 function closeDrawer(){drawer.classList.remove('open');backdrop.classList.remove('open');drawer.setAttribute('aria-hidden','true')}
