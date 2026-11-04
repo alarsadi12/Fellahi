@@ -268,4 +268,69 @@
     setTimeout(refreshUser, 0);
   });
   refreshUser();
+    // لوحة تحكم المدير
+  const adminButton = document.createElement("button");
+  adminButton.className = "fc-btn";
+  adminButton.textContent = "🛡️ لوحة تحكم المدير";
+  adminButton.style.display = "none";
+
+  const adminPanel = document.createElement("div");
+  adminPanel.className = "fc-box fc-hidden";
+  adminPanel.innerHTML = `
+    <h3>🛡️ لوحة تحكم المدير</h3>
+    <div id="fc-admin-stats">جاري تحميل الإحصائيات...</div>
+    <h4>👥 المستخدمون</h4>
+    <div id="fc-admin-users">جاري التحميل...</div>
+    <button class="fc-btn" id="fc-admin-refresh">تحديث</button>
+  `;
+
+  $("fc-user").appendChild(adminButton);
+  $("fc-user").appendChild(adminPanel);
+
+  adminButton.onclick = async () => {
+    if (!isAdmin) return;
+    adminPanel.classList.toggle("fc-hidden");
+    if (!adminPanel.classList.contains("fc-hidden")) {
+      await loadAdminPanel();
+    }
+  };
+
+  async function loadAdminPanel() {
+    if (!isAdmin || !currentUser) return;
+
+    const [users, posts, comments] = await Promise.all([
+      db.from("profiles").select("id,full_name,role,created_at")
+        .order("created_at", { ascending: false }).limit(200),
+      db.from("posts").select("id", { count: "exact", head: true }),
+      db.from("comments").select("id", { count: "exact", head: true })
+    ]);
+
+    if (users.error || posts.error || comments.error) {
+      $("fc-admin-stats").textContent =
+        "تعذر تحميل البيانات: " +
+        (users.error || posts.error || comments.error).message;
+      return;
+    }
+
+    $("fc-admin-stats").innerHTML = `
+      <div class="fc-box">👥 المستخدمون: ${users.data.length}</div>
+      <div class="fc-box">📝 المنشورات: ${posts.count || 0}</div>
+      <div class="fc-box">💬 التعليقات: ${comments.count || 0}</div>
+    `;
+
+    $("fc-admin-users").innerHTML = users.data.map(user => `
+      <div class="fc-box">
+        <strong>${esc(user.full_name || "مستخدم")}</strong>
+        <p class="fc-muted">الصلاحية: ${user.role === "admin" ? "مدير" : "مستخدم"}</p>
+      </div>
+    `).join("");
+  }
+
+  $("fc-admin-refresh").onclick = loadAdminPanel;
+
+  const originalRefreshUser = refreshUser;
+  refreshUser = async function() {
+    await originalRefreshUser();
+    adminButton.style.display = isAdmin ? "inline-block" : "none";
+  };
 })();
