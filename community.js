@@ -279,8 +279,8 @@
     <button class="fc-btn" id="fc-admin-refresh">تحديث</button>
   `;
 
-  $("fc-user").appendChild(adminButton);
-  $("fc-user").appendChild(adminPanel);
+$("fc-user").parentElement.appendChild(adminButton);
+  $("fc-user").parentElement.appendChild(adminPanel);
 
   adminButton.onclick = async () => {
     if (!isAdmin) return;
