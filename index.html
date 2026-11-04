@@ -419,20 +419,101 @@ d.append(b);
 box.append(d);
 });
 }
-
-/* سجل الأشجار والمحاصيل */
 $('padd').onclick=()=>{
-if(!$('pn').value)return alert('أدخل اسم النبات');
+ if(!$('pn').value)return alert('أدخل اسم النبات');
 
-let a=read('fellahi2plants');
+ let a=read('fellahi2plants');
 
-a.push({
-n:$('pn').value,
-c:$('pc').value,
-a:$('pa').value,
-ar:$('par').value,
-m:$('pm').value
-})
+ a.push({
+  n:$('pn').value,
+  c:$('pc').value,
+  a:$('pa').value,
+  ar:$('par').value,
+  m:$('pm').value
+ });
+
+ save('fellahi2plants',a);
+ ['pn','pc','pa','par','pm'].forEach(x=>$(x).value='');
+ renderPlants();
+};
+
+function renderPlants(){
+ let box=$('plist');
+ box.innerHTML='<b>سجلي</b>';
+
+ read('fellahi2plants').forEach((x,i)=>{
+  let d=document.createElement('div');
+  d.className='item';
+  d.textContent=x.n+' · العدد: '+x.c+' · العمر/الغرس: '+x.a+' · '+x.ar+' · '+x.m;
+
+  let b=document.createElement('button');
+  b.className='del';
+  b.textContent='حذف';
+
+  b.onclick=()=>{
+   let a=read('fellahi2plants');
+   a.splice(i,1);
+   save('fellahi2plants',a);
+   renderPlants();
+  };
+
+  d.append(b);
+  box.append(d);
+ });
+}
+
+/* الصور: معاينة فقط، دون تحليل آلي */
+let img=null;
+
+$('aphoto').onchange=()=>{
+ let f=$('aphoto').files[0];
+ img=null;
+ $('apreview').style.display='none';
+
+ if(!f)return;
+
+ if(f.size>4*1024*1024){
+  $('aphoto').value='';
+  return alert('الصورة يجب أن تكون أقل من 4 ميغابايت');
+ }
+
+ let r=new FileReader();
+
+ r.onload=()=>{
+  img=r.result;
+  $('apreview').src=img;
+  $('apreview').style.display='block';
+ };
+
+ r.readAsDataURL(f);
+};
+
+$('asend').onclick=()=>{
+ if(!$('aq').value.trim()&&!img){
+  return alert('اكتب سؤالاً أو أرفق صورة');
+ }
+
+ ask($('aq').value,img,'aresult');
+};
+
+/* اختيار اللغة */
+$('lang').onchange=e=>{
+ let v=e.target.value;
+ document.documentElement.lang=v;
+ document.documentElement.dir=v==='ar'?'rtl':'ltr';
+ alert('واجهة النسخة الحالية بالعربية؛ ستتم إضافة ترجمة كاملة في تحديث لاحق.');
+};
+
+renderWater();
+renderPlants();
+
+if('serviceWorker'in navigator){
+ addEventListener('load',()=>{
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+ });
+}
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./community.js"></script>
 </body>
