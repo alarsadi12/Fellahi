@@ -168,13 +168,19 @@ $("search").oninput=renderAds;
 $("filter").onchange=renderAds;
 
 (async()=>{
-const {data}=await db.auth.getSession();
-user=data.session?.user||null;
+  const {data,error}=await db.auth.getSession();
 
-if(user){
-$("hint").textContent="أنت مسجل الدخول، يمكنك نشر إعلانك.";
-}
-await loadAds();
+  if(error){
+    $("hint").textContent="خطأ في التحقق من الحساب: "+error.message;
+  }else if(data.session?.user){
+    user=data.session.user;
+    $("hint").textContent="أنت مسجل الدخول، يمكنك نشر إعلانك.";
+  }else{
+    user=null;
+    $("hint").textContent="السوق لم يعثر على جلسة الدخول. ارجع للمجتمع وسجل الدخول.";
+  }
+
+  await loadAds();
 })();
 </script>
 </body>
