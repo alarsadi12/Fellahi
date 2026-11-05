@@ -177,7 +177,7 @@ $("filter").onchange=renderAds;
 
 (async()=>{
   const {data,error}=await db.auth.getSession();
-
+alert(data.session?.user ? "الحساب موجود" : "الحساب غير موجود");
   if(error){
     $("hint").textContent="خطأ في التحقق من الحساب: "+error.message;
   }else if(data.session?.user){
