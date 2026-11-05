@@ -70,7 +70,15 @@ a{color:inherit}
 <script>
 const db=window.supabase.createClient(
 "https://kldxlodykkomkresegyt.supabase.co",
-"sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ"
+"sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ",
+{
+  auth:{
+    storageKey:"sb-kldxlodykkomkresegyt-auth-token",
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:true
+  }
+}
 );
 
 const $=id=>document.getElementById(id);
