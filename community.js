@@ -103,7 +103,7 @@
   $("fc-auth").classList.toggle("fc-hidden", !!currentUser);
   $("fc-user").classList.toggle("fc-hidden", !currentUser);
   $("fc-publish").classList.toggle("fc-hidden", !currentUser);
-
+await loadPosts();
   
   }
 
