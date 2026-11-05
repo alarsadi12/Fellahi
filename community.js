@@ -294,7 +294,7 @@ $("fc-user").parentElement.appendChild(adminButton);
     if (!isAdmin || !currentUser) return;
 
     const [users, posts, comments] = await Promise.all([
-      db.from("profiles").select("id,full_name,role,created_at")
+      db.from("profiles").select("id,full_name,role,created_at,is_banned")
         .order("created_at", { ascending: false }).limit(200),
       db.from("posts").select("id", { count: "exact", head: true }),
       db.from("comments").select("id", { count: "exact", head: true })
@@ -314,11 +314,45 @@ $("fc-user").parentElement.appendChild(adminButton);
     `;
 
     $("fc-admin-users").innerHTML = users.data.map(user => `
-      <div class="fc-box">
-        <strong>${esc(user.full_name || "مستخدم")}</strong>
-        <p class="fc-muted">الصلاحية: ${user.role === "admin" ? "مدير" : "مستخدم"}</p>
-      </div>
-    `).join("");
+  <div class="fc-box">
+    <strong>${esc(user.full_name || "مستخدم")}</strong>
+    <p class="fc-muted">
+      الصلاحية: ${user.role === "admin" ? "مدير" : "مستخدم"}
+    </p>
+    <p class="fc-muted">
+      الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}
+    </p>
+    ${user.id !== currentUser.id && user.role !== "admin" ? `
+      <button class="fc-btn" data-ban="${esc(user.id)}">
+        ${user.is_banned ? "إلغاء الحظر" : "🚫 حظر المستخدم"}
+      </button>
+    ` : ""}
+  </div>
+`).join("");
+
+$("fc-admin-users").querySelectorAll("[data-ban]").forEach(btn => {
+  btn.onclick = async () => {
+    if (!isAdmin) return;
+    const id = btn.dataset.ban;
+    const user = users.data.find(u => u.id === id);
+    if (!user) return;
+
+    const action = user.is_banned ? "إلغاء الحظر" : "حظر";
+    if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
+
+    const { error } = await db.from("profiles")
+      .update({ is_banned: !user.is_banned })
+      .eq("id", id);
+
+    if (error) {
+      alert("تعذر تنفيذ العملية: " + error.message);
+      return;
+    }
+
+    alert("تمت العملية بنجاح");
+    await loadAdminPanel();
+  };
+});
   }
 
   $("fc-admin-refresh").onclick = loadAdminPanel;
