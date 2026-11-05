@@ -26,13 +26,13 @@ a{color:inherit}
 <p>بيع وشراء المنتجات والمعدات الفلاحية</p>
 <a href="index.html">← الرجوع إلى فلاحي 2.0</a>
 </header>
-
 <main>
-<div class="card">
+  <div class="card">
 <h3>➕ نشر إعلان جديد</h3>
-<p id="hint">اختبار النشر الجديد</p>
+<p id="hint">السوق الفلاحي</p>
 
 <input id="title" placeholder="اسم المنتج">
+
 <select id="category">
 <option>شتلات وبذور</option>
 <option>خضر وفواكه</option>
@@ -41,6 +41,7 @@ a{color:inherit}
 <option>سقي وري</option>
 <option>أخرى</option>
 </select>
+
 <textarea id="description" placeholder="تفاصيل المنتج"></textarea>
 <input id="price" type="number" min="0" placeholder="الثمن بالدرهم">
 <input id="city" placeholder="المدينة أو المنطقة">
@@ -53,6 +54,7 @@ a{color:inherit}
 <div class="card">
 <h3>🔎 إعلانات السوق</h3>
 <input id="search" placeholder="ابحث عن منتج أو مدينة">
+
 <select id="filter">
 <option value="">جميع الأصناف</option>
 <option>شتلات وبذور</option>
@@ -62,145 +64,155 @@ a{color:inherit}
 <option>سقي وري</option>
 <option>أخرى</option>
 </select>
+
 <div id="ads">جاري تحميل الإعلانات...</div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.81.1/dist/umd/supabase.js"></script>
-  <script>
-alert(typeof window.supabase);
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-
-alert("JavaScript خدام");
-const db=window.supabase.createClient(
-"https://kldxlodykkomkresegyt.supabase.co",
-"sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ",
-{
-  auth:{
-    storageKey:"sb-kldxlodykkomkresegyt-auth-token",
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true
+const db = window.supabase.createClient(
+  "https://kldxlodykkomkresegyt.supabase.co",
+  "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ",
+  {
+    auth: {
+      storageKey: "sb-kldxlodykkomkresegyt-auth-token",
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
   }
-}
-);
-alert("تم إنشاء اتصال Supabase");
-const $=id=>document.getElementById(id);
-$("hint").textContent="وصلنا إلى JavaScript";
-let user=null;
-let allAds=[];
-
-function message(t){
-$("message").textContent=t;
-}
-
-function esc(v){
-return String(v??"").replace(/[&<>"']/g,c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;',"'":"&#39;"
-}[c]));
-}
-
-async function loadAds(){
-const {data,error}=await db.from("market_ads")
-.select("*")
-.eq("status","active")
-.order("created_at",{ascending:false});
-
-if(error){
-$("ads").textContent="تعذر تحميل الإعلانات: "+error.message;
-return;
-}
-allAds=data||[];
-renderAds();
-}
-
-function renderAds(){
-let q=$("search").value.toLowerCase().trim();
-let cat=$("filter").value;
-
-let rows=allAds.filter(a=>
-(!cat||a.category===cat)&&
-(!q||[a.title,a.city,a.description,a.category].join(" ").toLowerCase().includes(q))
 );
 
-if(!rows.length){
-$("ads").textContent="لا توجد إعلانات حالياً.";
-return;
+const $ = id => document.getElementById(id);
+let user = null;
+let allAds = [];
+
+function message(t) {
+  $("message").textContent = t;
 }
 
-$("ads").innerHTML=rows.map(a=>`
-<div class="ad">
-<h3>${esc(a.title)}</h3>
-<small>${esc(a.category)} · ${esc(a.city||"")}</small>
-<p>${esc(a.description||"")}</p>
-<div class="price">${a.price!==null?a.price+" درهم":"الثمن عند التواصل"}</div>
-${a.phone?`<p>📞 <a href="tel:${esc(a.phone)}">${esc(a.phone)}</a></p>`:""}
-</div>
-`).join("");
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[c]);
 }
 
-$("publish").onclick=async()=>{
-if(!user){
-message("سجل الدخول أولاً من المجتمع الفلاحي.");
-return;
+async function loadAds() {
+  const { data, error } = await db
+    .from("market_ads")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    $("ads").textContent = "تعذر تحميل الإعلانات: " + error.message;
+    return;
+  }
+
+  allAds = data || [];
+  renderAds();
 }
 
-let title=$("title").value.trim();
-if(!title){
-message("اكتب اسم المنتج.");
-return;
+function renderAds() {
+  const q = $("search").value.toLowerCase().trim();
+  const cat = $("filter").value;
+
+  const rows = allAds.filter(a =>
+    (!cat || a.category === cat) &&
+    (!q || [a.title, a.city, a.description, a.category]
+      .join(" ").toLowerCase().includes(q))
+  );
+
+  if (!rows.length) {
+    $("ads").textContent = "لا توجد إعلانات حالياً.";
+    return;
+  }
+
+  $("ads").innerHTML = rows.map(a => {
+    const phone = a.phone
+      ? '<p>📞 <a href="tel:' + esc(a.phone) + '">' + esc(a.phone) + '</a></p>'
+      : "";
+
+    return '<div class="ad">' +
+      '<h3>' + esc(a.title) + '</h3>' +
+      '<small>' + esc(a.category) + ' · ' + esc(a.city || "") + '</small>' +
+      '<p>' + esc(a.description || "") + '</p>' +
+      '<div class="price">' +
+      (a.price !== null ? esc(a.price) + " درهم" : "الثمن عند التواصل") +
+      '</div>' + phone +
+      '</div>';
+  }).join("");
 }
 
-let price=$("price").value;
-if(price!==""&&Number(price)<0){
-message("الثمن غير صحيح.");
-return;
-}
+$("publish").onclick = async function() {
+  if (!user) {
+    message("سجل الدخول أولاً من المجتمع الفلاحي.");
+    return;
+  }
 
-let {error}=await db.from("market_ads").insert({
-user_id:user.id,
-title,
-category:$("category").value,
-description:$("description").value.trim(),
-price:price===""?null:Number(price),
-city:$("city").value.trim(),
-phone:$("phone").value.trim()
-});
+  const title = $("title").value.trim();
+  const category = $("category").value;
+  const description = $("description").value.trim();
+  const priceValue = $("price").value;
+  const city = $("city").value.trim();
+  const phone = $("phone").value.trim();
 
-if(error){
-message("خطأ: "+error.message);
-return;
-}
+  if (!title || !city || !phone) {
+    message("عمر اسم المنتج والمدينة ورقم الهاتف.");
+    return;
+  }
 
-message("تم نشر الإعلان بنجاح ✅");
-["title","description","price","city","phone"].forEach(id=>$(id).value="");
-await loadAds();
+  const { error } = await db.from("market_ads").insert({
+    user_id: user.id,
+    title,
+    category,
+    description,
+    price: priceValue === "" ? null : Number(priceValue),
+    city,
+    phone,
+    status: "active"
+  });
+
+  if (error) {
+    message("تعذر نشر الإعلان: " + error.message);
+    return;
+  }
+
+  message("تم نشر الإعلان بنجاح!");
+  $("title").value = "";
+  $("description").value = "";
+  $("price").value = "";
+  $("city").value = "";
+  $("phone").value = "";
+
+  await loadAds();
 };
 
-$("search").oninput=renderAds;
-$("filter").onchange=renderAds;
+$("search").oninput = renderAds;
+$("filter").onchange = renderAds;
 
-(async()=>{
-  try {
-    const {data,error}=await db.auth.getSession();
+async function startMarket() {
+  $("hint").textContent = "جاري الاتصال...";
 
-    if(error){
-      user=null;
-      $("hint").textContent="خطأ في التحقق من الحساب: "+error.message;
-    }else if(data?.session?.user){
-      user=data.session.user;
-      $("hint").textContent="أنت مسجل الدخول، يمكنك نشر إعلانك.";
-    }else{
-      user=null;
-      $("hint").textContent="السوق لم يعثر على جلسة الدخول. ارجع للمجتمع وسجل الدخول.";
-    }
+  const { data, error } = await db.auth.getSession();
 
-    await loadAds();
-
-  }catch(e){
-    $("hint").textContent="خطأ: "+e.message;
+  if (error) {
+    $("hint").textContent = "خطأ في الحساب: " + error.message;
+    return;
   }
-})();
+
+  user = data.session ? data.session.user : null;
+
+  $("hint").textContent = user
+    ? "أنت مسجل الدخول، يمكنك نشر إعلانك."
+    : "ارجع للمجتمع الفلاحي وسجل الدخول أولاً.";
+
+  await loadAds();
+}
+
+startMarket();
 </script>
 </body>
 </html>
