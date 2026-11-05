@@ -5,6 +5,7 @@
   const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  alert("Supabase يعمل");
   const root = document.getElementById("community-app") ||
                document.getElementById("community");
 
