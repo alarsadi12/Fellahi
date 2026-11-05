@@ -8,7 +8,7 @@
   alert("Supabase يعمل");
   const root = document.getElementById("community-app") ||
                document.getElementById("community");
-
+alert(root ? "تم العثور على مساحة المجتمع" : "لم يتم العثور على مساحة المجتمع");
   if (!root) {
     console.error("Community container not found");
     return;
