@@ -1,5 +1,6 @@
 // مجتمع فلاحي 2.0 — Supabase
 (() => {
+  alert("بداية ملف المجتمع تعمل");
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
 
