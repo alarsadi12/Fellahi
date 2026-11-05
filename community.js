@@ -380,4 +380,5 @@ $("fc-admin-users").querySelectorAll("[data-ban]").forEach(btn => {
     setTimeout(refreshUser, 0);
   });
 
+ console.log("FELLAHI COMMUNITY LOADED"); 
   refreshUser();})();
