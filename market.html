@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>السوق الفلاحي | فلاحي 2.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f8f5;color:#183329;font-family:Arial,Tahoma}
+header{background:#176b45;color:white;padding:25px 18px;border-radius:0 0 22px 22px}
+main{max-width:700px;margin:auto;padding:15px}
+.card{background:white;padding:16px;border-radius:15px;margin:14px 0}
+input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:9px;font:inherit}
+textarea{min-height:80px}
+button{background:#176b45;color:white;border:0;border-radius:9px;padding:12px;width:100%;font-weight:bold}
+.ad{border-bottom:1px solid #ddd;padding:13px 0}
+.price{color:#176b45;font-weight:bold}
+small{color:#718078}
+a{color:inherit}
+</style>
+</head>
+<body>
+
+<header>
+<h2>🧺 السوق الفلاحي</h2>
+<p>بيع وشراء المنتجات والمعدات الفلاحية</p>
+<a href="index.html">← الرجوع إلى فلاحي 2.0</a>
+</header>
+
+<main>
+<div class="card">
+<h3>➕ نشر إعلان جديد</h3>
+<p id="hint">خاصك تسجل الدخول من المجتمع الفلاحي أولاً.</p>
+
+<input id="title" placeholder="اسم المنتج">
+<select id="category">
+<option>شتلات وبذور</option>
+<option>خضر وفواكه</option>
+<option>معدات فلاحية</option>
+<option>أسمدة وأدوية</option>
+<option>سقي وري</option>
+<option>أخرى</option>
+</select>
+<textarea id="description" placeholder="تفاصيل المنتج"></textarea>
+<input id="price" type="number" min="0" placeholder="الثمن بالدرهم">
+<input id="city" placeholder="المدينة أو المنطقة">
+<input id="phone" placeholder="رقم الهاتف">
+
+<button id="publish">نشر الإعلان</button>
+<p id="message"></p>
+</div>
+
+<div class="card">
+<h3>🔎 إعلانات السوق</h3>
+<input id="search" placeholder="ابحث عن منتج أو مدينة">
+<select id="filter">
+<option value="">جميع الأصناف</option>
+<option>شتلات وبذور</option>
+<option>خضر وفواكه</option>
+<option>معدات فلاحية</option>
+<option>أسمدة وأدوية</option>
+<option>سقي وري</option>
+<option>أخرى</option>
+</select>
+<div id="ads">جاري تحميل الإعلانات...</div>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient(
+"https://kldxlodykkomkresegyt.supabase.co",
+"sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ"
+);
+
+const $=id=>document.getElementById(id);
+let user=null;
+let allAds=[];
+
+function message(t){
+$("message").textContent=t;
+}
+
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;',"'":"&#39;"
+}[c]));
+}
+
+async function loadAds(){
+const {data,error}=await db.from("market_ads")
+.select("*")
+.eq("status","active")
+.order("created_at",{ascending:false});
+
+if(error){
+$("ads").textContent="تعذر تحميل الإعلانات: "+error.message;
+return;
+}
+allAds=data||[];
+renderAds();
+}
+
+function renderAds(){
+let q=$("search").value.toLowerCase().trim();
+let cat=$("filter").value;
+
+let rows=allAds.filter(a=>
+(!cat||a.category===cat)&&
+(!q||[a.title,a.city,a.description,a.category].join(" ").toLowerCase().includes(q))
+);
+
+if(!rows.length){
+$("ads").textContent="لا توجد إعلانات حالياً.";
+return;
+}
+
+$("ads").innerHTML=rows.map(a=>`
+<div class="ad">
+<h3>${esc(a.title)}</h3>
+<small>${esc(a.category)} · ${esc(a.city||"")}</small>
+<p>${esc(a.description||"")}</p>
+<div class="price">${a.price!==null?a.price+" درهم":"الثمن عند التواصل"}</div>
+${a.phone?`<p>📞 <a href="tel:${esc(a.phone)}">${esc(a.phone)}</a></p>`:""}
+</div>
+`).join("");
+}
+
+$("publish").onclick=async()=>{
+if(!user){
+message("سجل الدخول أولاً من المجتمع الفلاحي.");
+return;
+}
+
+let title=$("title").value.trim();
+if(!title){
+message("اكتب اسم المنتج.");
+return;
+}
+
+let price=$("price").value;
+if(price!==""&&Number(price)<0){
+message("الثمن غير صحيح.");
+return;
+}
+
+let {error}=await db.from("market_ads").insert({
+user_id:user.id,
+title,
+category:$("category").value,
+description:$("description").value.trim(),
+price:price===""?null:Number(price),
+city:$("city").value.trim(),
+phone:$("phone").value.trim()
+});
+
+if(error){
+message("خطأ: "+error.message);
+return;
+}
+
+message("تم نشر الإعلان بنجاح ✅");
+["title","description","price","city","phone"].forEach(id=>$(id).value="");
+await loadAds();
+};
+
+$("search").oninput=renderAds;
+$("filter").onchange=renderAds;
+
+(async()=>{
+const {data}=await db.auth.getSession();
+user=data.session?.user||null;
+
+if(user){
+$("hint").textContent="أنت مسجل الدخول، يمكنك نشر إعلانك.";
+}
+await loadAds();
+})();
+</script>
+</body>
+</html>
