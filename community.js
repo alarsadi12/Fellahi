@@ -104,25 +104,7 @@
   $("fc-user").classList.toggle("fc-hidden", !currentUser);
   $("fc-publish").classList.toggle("fc-hidden", !currentUser);
 
-  await loadPosts();
-}
-    const { data } = await db.auth.getUser();
-    currentUser = data.user || null;
-    isAdmin = false;
-
-    $("fc-auth").classList.toggle("fc-hidden", !!currentUser);
-    $("fc-user").classList.toggle("fc-hidden", !currentUser);
-    $("fc-publish").classList.toggle("fc-hidden", !currentUser);
-
-    if (currentUser) {
-      const { data: profile } = await db.from("profiles")
-        .select("full_name,role").eq("id", currentUser.id).maybeSingle();
-      isAdmin = profile?.role === "admin";
-      $("fc-welcome").textContent =
-        "مرحباً " + (profile?.full_name || currentUser.email || currentUser.phone || "");
-      if (isAdmin) $("fc-welcome").textContent += " — المشرف";
-    }
-    await loadPosts();
+  
   }
 
   $("fc-signup").onclick = async () => {
