@@ -74,6 +74,38 @@
   const msg = text => $("fc-message").textContent = text;
 
   async function refreshUser() {
+  const { data } = await db.auth.getUser();
+  currentUser = data.user || null;
+  isAdmin = false;
+
+  if (currentUser) {
+    const { data: profile } = await db.from("profiles")
+      .select("full_name,role,is_banned")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profile?.is_banned) {
+      await db.auth.signOut();
+      currentUser = null;
+      alert("هذا الحساب محظور من طرف الإدارة.");
+    } else {
+      isAdmin = profile?.role === "admin";
+
+      $("fc-welcome").textContent =
+        "مرحباً " + (profile?.full_name || currentUser.email || currentUser.phone || "");
+
+      if (isAdmin) {
+        $("fc-welcome").textContent += " — المشرف";
+      }
+    }
+  }
+
+  $("fc-auth").classList.toggle("fc-hidden", !!currentUser);
+  $("fc-user").classList.toggle("fc-hidden", !currentUser);
+  $("fc-publish").classList.toggle("fc-hidden", !currentUser);
+
+  await loadPosts();
+}
     const { data } = await db.auth.getUser();
     currentUser = data.user || null;
     isAdmin = false;
