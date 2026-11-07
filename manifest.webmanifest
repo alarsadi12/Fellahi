@@ -1,18 +1,26 @@
 {
-  "name": "فلاحي - Fellahi",
-  "short_name": "فلاحي",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f5f8f5",
-  "theme_color": "#176b45",
-  "lang": "ar",
-  "dir": "rtl",
-  "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+"id": "/Fellahi/",
+"name": "فلاحي 2.0 - Fellahi",
+"short_name": "فلاحي",
+"description": "فلاحي 2.0 منصة زراعية ذكية تساعد الفلاحين على حساب التسميد وتنظيم السقي ومتابعة المحاصيل والاستفادة من المساعد الذكي والمجتمع والسوق الفلاحي.",
+"start_url": "/Fellahi/",
+"scope": "/Fellahi/",
+"display": "standalone",
+"background_color": "#f5f8f5",
+"theme_color": "#176b45",
+"lang": "ar",
+"dir": "rtl",
+"categories": [
+"education",
+"utilities",
+"productivity"
+],
+"icons": [
+{
+"src": "icon.svg",
+"sizes": "any",
+"type": "image/svg+xml",
+"purpose": "any"
+}
+]
 }
