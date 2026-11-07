@@ -69,7 +69,6 @@
     }
   }
 
-  enterCommunityMode();
 
   let currentUser = null;
   let isAdmin = false;
