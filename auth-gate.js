@@ -1,5 +1,5 @@
 
-// فلاحي 2.0 — نظام تسجيل الدخول الموحد بتصميم احترافي
+// فلاحي 2.0 — نظام تسجيل الدخول الموحد
 (() => {
   "use strict";
 
@@ -210,47 +210,57 @@
       padding:25px;
     }
 
-    /* تثبيت زر تسجيل الخروج أسفل القائمة */
+    /* إصلاح القائمة الجانبية في Android وTWA */
     #drawer {
       position:fixed !important;
+      top:0 !important;
+      bottom:0 !important;
       box-sizing:border-box !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
       padding-bottom:100px !important;
+      -webkit-overflow-scrolling:touch;
     }
 
-    #fellahi-logout-button {
-      position:absolute;
-      right:17px;
-      left:17px;
-      bottom:calc(16px + env(safe-area-inset-bottom, 0px));
-      z-index:30;
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
-      gap:11px;
-      width:calc(100% - 34px);
-      box-sizing:border-box;
-      padding:13px 12px;
-      margin:0;
-      border:1px solid #f3d9d6;
-      border-radius:12px;
-      background:#fff5f4;
-      color:#b52d20;
-      text-align:right;
-      font-size:14px;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow:0 4px 14px rgba(0,0,0,.10);
+    /* زر تسجيل الخروج */
+    #drawer #fellahi-logout-button {
+      position:absolute !important;
+      right:17px !important;
+      left:17px !important;
+      bottom:calc(15px + env(safe-area-inset-bottom, 0px)) !important;
+      z-index:9999 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-start !important;
+      gap:11px !important;
+      width:calc(100% - 34px) !important;
+      min-height:49px !important;
+      box-sizing:border-box !important;
+      padding:13px 12px !important;
+      margin:0 !important;
+      border:1px solid #f3d9d6 !important;
+      border-radius:12px !important;
+      background:#fff5f4 !important;
+      color:#b52d20 !important;
+      text-align:right !important;
+      font-family:Arial,Tahoma,sans-serif !important;
+      font-size:14px !important;
+      font-weight:700 !important;
+      visibility:visible !important;
+      opacity:1 !important;
+      cursor:pointer !important;
+      box-shadow:0 4px 14px rgba(0,0,0,.10) !important;
     }
 
-    #fellahi-logout-button span {
+    #drawer #fellahi-logout-button span {
       width:28px;
       text-align:center;
       font-size:19px;
     }
 
-    #fellahi-logout-button:disabled {
-      opacity:.6;
-      cursor:wait;
+    #drawer #fellahi-logout-button:disabled {
+      opacity:.6 !important;
+      cursor:wait !important;
     }
 
     body.fellahi-auth-locked {
@@ -302,6 +312,7 @@
   let db = null;
   let currentMode = "login";
   let busy = false;
+  let drawerObserver = null;
 
   function renderForm() {
     currentMode = currentMode === "signup" ? "signup" : "login";
@@ -500,10 +511,10 @@
     }
   }
 
-  // إنشاء زر تسجيل الخروج في أسفل القائمة
+  // إنشاء زر تسجيل الخروج
   function createLogoutButton() {
     const drawer = document.getElementById("drawer");
-    if (!drawer) return;
+    if (!drawer || !db) return;
 
     let button = document.getElementById("fellahi-logout-button");
 
@@ -532,15 +543,17 @@
     drawer.appendChild(button);
   }
 
-  // إعادة التأكد من وجود الزر إذا أعيد إنشاء القائمة
+  // مراقبة القائمة مرة واحدة فقط
   function watchDrawer() {
     createLogoutButton();
 
-    const observer = new MutationObserver(() => {
+    if (drawerObserver || !document.body) return;
+
+    drawerObserver = new MutationObserver(() => {
       if (db) createLogoutButton();
     });
 
-    observer.observe(document.body, {
+    drawerObserver.observe(document.body, {
       childList: true,
       subtree: true
     });
