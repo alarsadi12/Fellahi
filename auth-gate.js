@@ -1,4 +1,4 @@
-// فلاحي 2.0 — نظام تسجيل الدخول الموحد
+// فلاحي 2.0 — نظام تسجيل الدخول الموحد بتصميم احترافي
 (() => {
   "use strict";
 
@@ -7,187 +7,244 @@
 
   const STYLE = `
     #fellahi-auth-gate {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      background: #f3f8f4;
-      overflow-y: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      font-family: Arial,Tahoma,sans-serif;
-      direction: rtl;
-      color: #183329;
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      background:linear-gradient(145deg,#e8f3e9,#f7faf6 55%,#e5f0e7);
+      overflow-y:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      font-family:Arial,Tahoma,sans-serif;
+      direction:rtl;
+      color:#183329;
     }
 
-    #fellahi-auth-gate * { box-sizing: border-box; }
+    #fellahi-auth-gate * { box-sizing:border-box; }
 
     #fellahi-auth-gate .auth-card {
-      width: 100%;
-      max-width: 430px;
-      background: white;
-      border-radius: 25px;
-      padding: 27px 23px;
-      box-shadow: 0 12px 45px rgba(20,70,45,.12);
-      text-align: center;
+      width:100%;
+      max-width:450px;
+      background:#fff;
+      border-radius:27px;
+      overflow:hidden;
+      box-shadow:0 20px 65px rgba(20,70,45,.16);
+      text-align:center;
+      border:1px solid rgba(255,255,255,.8);
+    }
+
+    #fellahi-auth-gate .auth-hero {
+      position:relative;
+      height:190px;
+      overflow:hidden;
+      background:linear-gradient(140deg,#176b45,#0b422d);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    #fellahi-auth-gate .auth-hero svg {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+    }
+
+    #fellahi-auth-gate .hero-content {
+      position:relative;
+      z-index:2;
+      color:white;
+      padding-top:12px;
+      text-shadow:0 2px 8px #073d2c55;
+    }
+
+    #fellahi-auth-gate .hero-content h1 {
+      color:white;
+      font-size:32px;
+      margin:7px 0;
+      letter-spacing:.3px;
+    }
+
+    #fellahi-auth-gate .hero-content p {
+      margin:0;
+      font-size:13px;
+      color:#e4f5e8;
     }
 
     #fellahi-auth-gate .auth-logo {
-      width: 112px;
-      height: 112px;
-      margin: 0 auto 12px;
-      border-radius: 28px;
-      background: linear-gradient(145deg,#176b45,#0d4930);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      box-shadow: 0 8px 20px #176b4530;
+      width:76px;
+      height:76px;
+      margin:0 auto;
+      border-radius:23px;
+      background:linear-gradient(145deg,#ffffff,#e4f5e7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 7px 22px #063d2c55;
+      border:3px solid #ffffff55;
     }
 
     #fellahi-auth-gate .auth-logo svg {
-      width: 88px;
-      height: 88px;
+      width:59px;
+      height:59px;
     }
 
-    #fellahi-auth-gate h1 {
-      color: #176b45;
-      font-size: 29px;
-      margin: 8px 0;
+    #fellahi-auth-gate .auth-body {
+      padding:23px 24px 25px;
     }
 
-    #fellahi-auth-gate .auth-subtitle {
-      color: #718078;
-      font-size: 14px;
-      line-height: 1.8;
-      margin-bottom: 22px;
+    #fellahi-auth-gate .auth-intro {
+      color:#718078;
+      font-size:13px;
+      line-height:1.8;
+      margin:0 0 19px;
     }
 
     #fellahi-auth-gate .auth-tabs {
-      display: flex;
-      background: #edf4ef;
-      border-radius: 13px;
-      padding: 4px;
-      margin-bottom: 18px;
-      gap: 5px;
+      display:flex;
+      background:#edf4ef;
+      border-radius:14px;
+      padding:5px;
+      margin-bottom:19px;
+      gap:5px;
     }
 
     #fellahi-auth-gate .auth-tabs button {
-      flex: 1;
-      border: 0;
-      border-radius: 10px;
-      padding: 12px 5px;
-      background: transparent;
-      color: #567064;
-      font-weight: bold;
-      cursor: pointer;
+      flex:1;
+      border:0;
+      border-radius:11px;
+      padding:13px 5px;
+      background:transparent;
+      color:#567064;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+      transition:.2s;
     }
 
     #fellahi-auth-gate .auth-tabs button.active {
-      background: #176b45;
-      color: white;
+      background:#176b45;
+      color:white;
+      box-shadow:0 4px 12px #176b4530;
     }
 
     #fellahi-auth-gate .auth-field {
-      text-align: right;
-      margin: 12px 0;
+      text-align:right;
+      margin:13px 0;
     }
 
     #fellahi-auth-gate .auth-field label {
-      display: block;
-      font-size: 13px;
-      font-weight: bold;
-      margin: 0 3px 7px;
+      display:block;
+      font-size:13px;
+      font-weight:bold;
+      margin:0 3px 8px;
+      color:#294b3b;
     }
 
     #fellahi-auth-gate input {
-      width: 100%;
-      border: 1px solid #dce8df;
-      background: #fbfdfb;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 15px;
-      outline: none;
-      direction: rtl;
+      width:100%;
+      border:1px solid #dce8df;
+      background:#f9fcf9;
+      border-radius:13px;
+      padding:15px;
+      font-size:15px;
+      outline:none;
+      direction:rtl;
+      transition:.2s;
+      color:#183329;
     }
 
     #fellahi-auth-gate input:focus {
-      border-color: #176b45;
-      box-shadow: 0 0 0 3px #176b4515;
+      border-color:#176b45;
+      background:#fff;
+      box-shadow:0 0 0 3px #176b4515;
     }
 
     #fellahi-auth-gate .auth-submit {
-      width: 100%;
-      border: 0;
-      border-radius: 13px;
-      padding: 15px;
-      margin-top: 12px;
-      background: #176b45;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
+      width:100%;
+      border:0;
+      border-radius:14px;
+      padding:16px;
+      margin-top:13px;
+      background:linear-gradient(135deg,#218452,#125536);
+      color:white;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      box-shadow:0 7px 17px #176b4530;
+      transition:transform .2s,opacity .2s;
+    }
+
+    #fellahi-auth-gate .auth-submit:active {
+      transform:scale(.98);
     }
 
     #fellahi-auth-gate .auth-submit:disabled {
-      opacity: .6;
-      cursor: wait;
+      opacity:.6;
+      cursor:wait;
     }
 
     #fellahi-auth-gate .auth-message {
-      display: none;
-      padding: 11px;
-      border-radius: 10px;
-      margin-top: 13px;
-      font-size: 13px;
-      line-height: 1.7;
-      overflow-wrap: anywhere;
+      display:none;
+      padding:12px;
+      border-radius:11px;
+      margin-top:14px;
+      font-size:13px;
+      line-height:1.8;
+      overflow-wrap:anywhere;
     }
 
     #fellahi-auth-gate .auth-footer {
-      margin-top: 20px;
-      color: #89978e;
-      font-size: 12px;
+      margin-top:20px;
+      padding-top:15px;
+      border-top:1px solid #edf2ee;
+      color:#89978e;
+      font-size:12px;
     }
 
     #fellahi-auth-gate .auth-loading {
-      color: #176b45;
-      font-weight: bold;
-      padding: 25px;
+      color:#176b45;
+      font-weight:bold;
+      padding:25px;
     }
 
-    /* تسجيل الخروج داخل القائمة الجانبية فقط */
     #fellahi-logout-button {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      width: 100%;
-      padding: 12px 10px;
-      margin-top: 12px;
-      border: 1px solid #f3d9d6;
-      border-radius: 12px;
-      background: #fff5f4;
-      color: #b52d20;
-      text-align: right;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
+      display:flex;
+      align-items:center;
+      gap:11px;
+      width:100%;
+      padding:12px 10px;
+      margin-top:12px;
+      border:1px solid #f3d9d6;
+      border-radius:12px;
+      background:#fff5f4;
+      color:#b52d20;
+      text-align:right;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
     }
 
     #fellahi-logout-button span {
-      width: 28px;
-      text-align: center;
-      font-size: 19px;
+      width:28px;
+      text-align:center;
+      font-size:19px;
     }
 
     #fellahi-logout-button:disabled {
-      opacity: .6;
-      cursor: wait;
+      opacity:.6;
+      cursor:wait;
     }
 
     body.fellahi-auth-locked {
-      overflow: hidden !important;
+      overflow:hidden !important;
+    }
+
+    @media(max-width:380px) {
+      #fellahi-auth-gate { padding:10px; }
+      #fellahi-auth-gate .auth-hero { height:170px; }
+      #fellahi-auth-gate .auth-body { padding:19px 17px 22px; }
     }
   `;
 
@@ -197,6 +254,7 @@
 
   const gate = document.createElement("div");
   gate.id = "fellahi-auth-gate";
+
   gate.innerHTML = `
     <div class="auth-card">
       <div class="auth-loading">جاري التحقق من الحساب...</div>
@@ -235,77 +293,123 @@
     gate.innerHTML = `
       <div class="auth-card">
 
-        <div class="auth-logo">
-          <svg viewBox="0 0 100 100" fill="none"
+        <div class="auth-hero">
+
+          <svg viewBox="0 0 450 210" preserveAspectRatio="xMidYMid slice"
                xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 83V43" stroke="white"
-              stroke-width="6" stroke-linecap="round"/>
-            <path d="M50 58C22 58 16 37 17 20C39 19 57 30 50 58Z"
-              fill="#B8E7A5"/>
-            <path d="M51 46C54 20 73 12 89 14C91 37 76 52 51 46Z"
-              fill="#D9F2C8"/>
-            <path d="M25 77C37 70 63 70 75 77"
-              stroke="#D9F2C8" stroke-width="5"
-              stroke-linecap="round"/>
-            <path d="M19 85H81" stroke="white"
-              stroke-width="5" stroke-linecap="round"/>
+
+            <circle cx="355" cy="48" r="28" fill="#F5D98B" opacity=".95"/>
+
+            <path d="M0 120 Q90 55 180 115 T450 95 V210 H0Z"
+                  fill="#367C50"/>
+
+            <path d="M0 145 Q100 90 210 140 T450 125 V210 H0Z"
+                  fill="#75A95D"/>
+
+            <path d="M0 175 Q100 125 220 170 T450 155 V210 H0Z"
+                  fill="#B4D58B"/>
+
+            <path d="M0 195 Q130 160 250 190 T450 180 V210 H0Z"
+                  fill="#D6E9AD"/>
+
+            <g fill="#E7F3D2" opacity=".8">
+              <path d="M40 100 Q25 78 44 65 Q64 80 40 100Z"/>
+              <path d="M60 105 Q58 78 82 75 Q87 99 60 105Z"/>
+              <path d="M390 112 Q375 88 395 78 Q415 96 390 112Z"/>
+            </g>
+
+            <g stroke="#E8F5D8" stroke-width="2" opacity=".7" fill="none">
+              <path d="M15 205 Q90 165 165 205"/>
+              <path d="M180 205 Q270 155 360 205"/>
+              <path d="M300 205 Q370 170 445 195"/>
+            </g>
+
+            <g fill="#D8F0C1">
+              <path d="M110 145 Q95 120 112 108 Q132 124 110 145Z"/>
+              <path d="M112 145 Q132 115 150 126 Q144 145 112 145Z"/>
+              <path d="M112 145 V165" stroke="#D8F0C1" stroke-width="4"/>
+            </g>
+
           </svg>
-        </div>
 
-        <h1>فلاحي 2.0</h1>
-
-        <div class="auth-subtitle">
-          شريكك الذكي في الفلاحة<br>
-          أدواتك ومجتمعك وسوقك في مكان واحد
-        </div>
-
-        <div class="auth-tabs">
-          <button type="button" data-mode="login"
-            class="${currentMode === "login" ? "active" : ""}">
-            تسجيل الدخول
-          </button>
-          <button type="button" data-mode="signup"
-            class="${currentMode === "signup" ? "active" : ""}">
-            حساب جديد
-          </button>
-        </div>
-
-        <form id="fellahi-auth-form">
-
-          <div class="auth-field" id="fellahi-name-field"
-            style="display:${currentMode === "signup" ? "block" : "none"}">
-            <label>الاسم الكامل</label>
-            <input id="fellahi-name" type="text"
-              placeholder="اكتب اسمك الكامل"
-              autocomplete="name">
+          <div class="hero-content">
+            <div class="auth-logo">
+              <svg viewBox="0 0 100 100" fill="none"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 83V43" stroke="#176b45"
+                  stroke-width="6" stroke-linecap="round"/>
+                <path d="M50 58C22 58 16 37 17 20C39 19 57 30 50 58Z"
+                  fill="#79BD68"/>
+                <path d="M51 46C54 20 73 12 89 14C91 37 76 52 51 46Z"
+                  fill="#176b45"/>
+                <path d="M25 77C37 70 63 70 75 77"
+                  stroke="#176b45" stroke-width="5"
+                  stroke-linecap="round"/>
+                <path d="M19 85H81" stroke="#176b45"
+                  stroke-width="5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h1>فلاحي 2.0</h1>
+            <p>التكنولوجيا لخدمة الفلاح</p>
           </div>
 
-          <div class="auth-field">
-            <label>البريد الإلكتروني</label>
-            <input id="fellahi-email" type="email"
-              placeholder="example@email.com"
-              autocomplete="email" required>
-          </div>
-
-          <div class="auth-field">
-            <label>كلمة المرور</label>
-            <input id="fellahi-password" type="password"
-              placeholder="كلمة المرور"
-              autocomplete="${currentMode === "login" ? "current-password" : "new-password"}"
-              minlength="6" required>
-          </div>
-
-          <button class="auth-submit" id="fellahi-submit" type="submit">
-            ${currentMode === "login" ? "دخول إلى التطبيق" : "إنشاء حساب"}
-          </button>
-
-          <div class="auth-message"></div>
-        </form>
-
-        <div class="auth-footer">
-          فلاحي 2.0 — التكنولوجيا لخدمة الفلاح
         </div>
 
+        <div class="auth-body">
+
+          <div class="auth-intro">
+            مرحباً بك في عالم فلاحي<br>
+            أدواتك ومجتمعك وسوقك في مكان واحد
+          </div>
+
+          <div class="auth-tabs">
+            <button type="button" data-mode="login"
+              class="${currentMode === "login" ? "active" : ""}">
+              تسجيل الدخول
+            </button>
+            <button type="button" data-mode="signup"
+              class="${currentMode === "signup" ? "active" : ""}">
+              حساب جديد
+            </button>
+          </div>
+
+          <form id="fellahi-auth-form">
+
+            <div class="auth-field" id="fellahi-name-field"
+              style="display:${currentMode === "signup" ? "block" : "none"}">
+              <label>الاسم الكامل</label>
+              <input id="fellahi-name" type="text"
+                placeholder="اكتب اسمك الكامل"
+                autocomplete="name">
+            </div>
+
+            <div class="auth-field">
+              <label>البريد الإلكتروني</label>
+              <input id="fellahi-email" type="email"
+                placeholder="example@email.com"
+                autocomplete="email" required>
+            </div>
+
+            <div class="auth-field">
+              <label>كلمة المرور</label>
+              <input id="fellahi-password" type="password"
+                placeholder="كلمة المرور"
+                autocomplete="${currentMode === "login" ? "current-password" : "new-password"}"
+                minlength="6" required>
+            </div>
+
+            <button class="auth-submit" id="fellahi-submit" type="submit">
+              ${currentMode === "login" ? "دخول إلى التطبيق ←" : "إنشاء حساب جديد"}
+            </button>
+
+            <div class="auth-message"></div>
+          </form>
+
+          <div class="auth-footer">
+            🌱 فلاحي 2.0 — شريكك في كل خطوة زراعية
+          </div>
+
+        </div>
       </div>
     `;
 
@@ -403,23 +507,20 @@
         button.disabled = false;
         button.textContent =
           currentMode === "login"
-            ? "دخول إلى التطبيق"
-            : "إنشاء حساب";
+            ? "دخول إلى التطبيق ←"
+            : "إنشاء حساب جديد";
       }
     }
   }
 
-  // إضافة زر الخروج إلى الشريط الجانبي في الصفحة الرئيسية
+  // تسجيل الخروج داخل القائمة الجانبية فقط
   function createLogoutButton() {
     const drawer = document.getElementById("drawer");
-
-    // الصفحات الأخرى لا تتوفر على القائمة الجانبية، لذلك لا نضيف زرّاً عائماً.
     if (!drawer) return;
 
     let button = document.getElementById("fellahi-logout-button");
 
     if (button && button.parentElement === drawer) return;
-
     if (button) button.remove();
 
     button = document.createElement("button");
@@ -434,9 +535,7 @@
 
       try {
         const { error } = await db.auth.signOut();
-
         if (error) throw error;
-
       } catch (error) {
         alert("تعذر تسجيل الخروج: " + error.message);
         button.disabled = false;
@@ -470,7 +569,6 @@
       window.fellahiSupabase = db;
 
       const { data, error } = await db.auth.getSession();
-
       if (error) throw error;
 
       if (data.session) {
@@ -497,13 +595,20 @@
     } catch (error) {
       gate.innerHTML = `
         <div class="auth-card">
-          <h1>فلاحي 2.0</h1>
-          <p style="color:#b52d20;line-height:1.8">
-            تعذر الاتصال بخدمة تسجيل الدخول.
-          </p>
-          <button class="auth-submit" id="fellahi-retry">
-            إعادة المحاولة
-          </button>
+          <div class="auth-hero">
+            <div class="hero-content">
+              <h1>فلاحي 2.0</h1>
+              <p>التكنولوجيا لخدمة الفلاح</p>
+            </div>
+          </div>
+          <div class="auth-body">
+            <p style="color:#b52d20;line-height:1.8">
+              تعذر الاتصال بخدمة تسجيل الدخول.
+            </p>
+            <button class="auth-submit" id="fellahi-retry">
+              إعادة المحاولة
+            </button>
+          </div>
         </div>
       `;
 
