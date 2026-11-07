@@ -1,1 +1,552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#176b45">
+<title>حسابي | فلاحي 2.0</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./auth-gate.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;color:#183329;font-family:Arial,Tahoma,sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{background:#176b45;color:white;padding:15px;display:flex;align-items:center;justify-content:space-between}
+.topbar h2{font-size:18px;margin:0}
+.topbar a{color:white;text-decoration:none;font-size:13px}
+.container{max-width:760px;margin:18px auto;padding:0 12px 35px}
+.card{background:white;border:1px solid #e5ece7;border-radius:16px;padding:16px;margin-bottom:14px}
+.profile-head{display:flex;align-items:center;gap:18px}
+.avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #d9eddf;background:#edf5ef}
+.avatar-placeholder{display:grid;place-items:center;font-size:48px}
+.profile-stats{display:flex;justify-content:space-around;flex:1;text-align:center}
+.stat strong{display:block;font-size:21px;color:#176b45}
+.stat span{font-size:12px;color:#77857c}
+.name{font-size:19px;font-weight:900;margin:15px 0 5px}
+.city{font-size:13px;color:#718078}
+.bio{font-size:14px;line-height:1.8;margin-top:9px;white-space:pre-wrap}
+.crops{font-size:13px;color:#176b45;margin-top:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.btn{border:0;border-radius:10px;padding:11px 15px;background:#176b45;color:white;font-weight:700}
+.btn.light{background:#edf5ef;color:#176b45}
+.btn.danger{background:#fff0f0;color:#bd3434}
+.btn:disabled{opacity:.6}
+.message{font-size:13px;color:#176b45;line-height:1.8;margin:10px 0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat-box{background:#f4f8f5;border-radius:12px;padding:13px 5px;text-align:center}
+.stat-box strong{display:block;color:#176b45;font-size:20px}
+.stat-box span{font-size:11px;color:#718078}
+.section-title{font-size:16px;color:#176b45;font-weight:900;margin:5px 0 13px}
+.tabs{display:flex;gap:8px;margin:15px 0}
+.tab{flex:1;border:1px solid #dce8df;border-radius:10px;padding:11px;background:white;color:#526158;font-weight:700}
+.tab.active{background:#176b45;color:white;border-color:#176b45}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.item{background:white;border:1px solid #e7eee8;border-radius:9px;overflow:hidden;min-width:0}
+.item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#edf3ee}
+.item-info{padding:8px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.item-info strong{display:block;color:#176b45}
+.empty{text-align:center;padding:30px 12px;color:#829087;font-size:13px;line-height:2;background:white;border-radius:12px}
+.form-card{display:none}
+.form-card.show{display:block}
+.label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
+.field{width:100%;padding:12px;border:1px solid #dce7df;border-radius:10px;background:white;outline:none}
+.field:focus{border-color:#176b45}
+.preview{width:100px;height:100px;border-radius:50%;object-fit:cover;display:block;margin:12px auto;border:3px solid #176b45}
+.footer-links{display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin:22px 0;font-size:12px}
+.footer-links a{color:#176b45;text-decoration:none}
+@media(max-width:420px){
+ .avatar{width:78px;height:78px}
+ .profile-head{gap:10px}
+ .stat strong{font-size:18px}
+ .stat span{font-size:10px}
+ .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+  <a href="./index.html">← العودة إلى فلاحي</a>
+  <h2>👨‍🌾 حسابي</h2>
+  <a href="./community.html">المجتمع</a>
+</header>
+
+<main class="container">
+
+  <div id="message" class="message">جاري تحميل حسابك...</div>
+
+  <section class="card">
+    <div class="profile-head">
+      <div id="avatarArea">
+        <div class="avatar avatar-placeholder">👨‍🌾</div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat">
+          <strong id="postsCount">0</strong>
+          <span>منشور</span>
+        </div>
+        <div class="stat">
+          <strong id="followersCount">0</strong>
+          <span>متابع</span>
+        </div>
+        <div class="stat">
+          <strong id="followingCount">0</strong>
+          <span>يتابع</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="name" id="profileName">فلاح</div>
+    <div class="city" id="profileCity"></div>
+    <div class="bio" id="profileBio"></div>
+    <div class="crops" id="profileCrops"></div>
+
+    <div class="actions">
+      <button class="btn" id="editButton">✏️ تعديل الحساب</button>
+      <a class="btn light" href="./community.html" style="text-decoration:none">🌱 المجتمع الفلاحي</a>
+      <a class="btn light" href="./market.html" style="text-decoration:none">🛒 السوق الفلاحي</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">📊 نشاطك في فلاحي</div>
+    <div class="stats-grid">
+      <div class="stat-box"><strong id="postsTotal">0</strong><span>منشوراتك</span></div>
+      <div class="stat-box"><strong id="adsTotal">0</strong><span>إعلانات السوق</span></div>
+      <div class="stat-box"><strong id="followersTotal">0</strong><span>المتابعون</span></div>
+      <div class="stat-box"><strong id="followingTotal">0</strong><span>تتابع</span></div>
+    </div>
+  </section>
+
+  <section id="editForm" class="card form-card">
+    <div class="section-title">✏️ تعديل معلومات الحساب</div>
+
+    <label class="label">الصورة الشخصية</label>
+    <img id="avatarPreview" class="preview"
+      src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer"
+      alt="الصورة الشخصية">
+    <input id="avatarFile" class="field" type="file" accept="image/*">
+
+    <label class="label">الاسم الكامل</label>
+    <input id="nameInput" class="field" maxlength="100" placeholder="اسمك الكامل">
+
+    <label class="label">المدينة أو المنطقة</label>
+    <input id="cityInput" class="field" maxlength="100" placeholder="مثلاً: القنيطرة">
+
+    <label class="label">نبذة عنك</label>
+    <textarea id="bioInput" class="field" rows="3" maxlength="1000"
+      placeholder="عرفنا على نشاطك الفلاحي..."></textarea>
+
+    <label class="label">المحاصيل والأشجار التي تهتم بها</label>
+    <input id="cropsInput" class="field"
+      placeholder="الأفوكادو، الزيتون، الحوامض...">
+
+    <div class="actions">
+      <button class="btn" id="saveButton">حفظ التغييرات</button>
+      <button class="btn light" id="cancelButton">إلغاء</button>
+    </div>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active" data-section="posts">📝 منشوراتي</button>
+    <button class="tab" data-section="ads">🛒 إعلاناتي</button>
+  </div>
+
+  <section id="postsSection">
+    <div class="section-title">منشوراتي في المجتمع الفلاحي</div>
+    <div id="postsGrid" class="grid">
+      <div class="empty" style="grid-column:1/-1">جاري تحميل المنشورات...</div>
+    </div>
+  </section>
+
+  <section id="adsSection" style="display:none">
+    <div class="section-title">إعلاناتي في السوق الفلاحي</div>
+    <div id="adsGrid" class="grid">
+      <div class="empty" style="grid-column:1/-1">جاري تحميل الإعلانات...</div>
+    </div>
+  </section>
+
+  <div class="footer-links">
+    <a href="./index.html">الرئيسية</a>
+    <a href="./market.html">السوق الفلاحي</a>
+    <a href="./community.html">المجتمع الفلاحي</a>
+  </div>
+</main>
+
+<script>
+(() => {
+"use strict";
+
+const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
+
+const db = window.fellahiSupabase ||
+  window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let profile = null;
+let userPosts = [];
+let userAds = [];
+
+const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+})[c]);
+
+function message(text) {
+  $("message").textContent = text || "";
+}
+
+function showAvatar(url) {
+  $("avatarArea").innerHTML = url
+    ? `<img class="avatar" src="${esc(url)}" alt="الصورة الشخصية">`
+    : `<div class="avatar avatar-placeholder">👨‍🌾</div>`;
+
+  $("avatarPreview").src = url ||
+    "https://placehold.co/200x200/e5f2e9/176b45?text=Farmer";
+}
+
+function showProfile(data) {
+  profile = data || {};
+
+  $("profileName").textContent = profile.full_name || "فلاح";
+  $("profileCity").textContent = profile.city ? "📍 " + profile.city : "";
+  $("profileBio").textContent = profile.bio || "";
+  $("profileCrops").textContent =
+    Array.isArray(profile.crops) && profile.crops.length
+      ? "🌱 يهتم بـ: " + profile.crops.join("، ")
+      : "";
+
+  $("nameInput").value = profile.full_name || "";
+  $("cityInput").value = profile.city || "";
+  $("bioInput").value = profile.bio || "";
+  $("cropsInput").value = Array.isArray(profile.crops)
+    ? profile.crops.join("، ")
+    : "";
+
+  showAvatar(profile.avatar_url);
+}
+
+async function loadProfile() {
+  const {data,error} = await db.from("profiles")
+    .select("id,full_name,city,bio,crops,avatar_url")
+    .eq("id",currentUser.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (!data) {
+    const fallbackName =
+      currentUser.user_metadata?.full_name ||
+      currentUser.email?.split("@")[0] || "فلاح";
+
+    const {error:insertError} = await db.from("profiles").upsert({
+      id:currentUser.id,
+      full_name:fallbackName
+    },{onConflict:"id"});
+
+    if (insertError) throw insertError;
+
+    return loadProfile();
+  }
+
+  showProfile(data);
+}
+
+async function loadStatistics() {
+  const [posts,followers,following,ads] = await Promise.all([
+    db.from("posts").select("id",{count:"exact",head:true})
+      .eq("user_id",currentUser.id),
+
+    db.from("follows").select("id",{count:"exact",head:true})
+      .eq("following_id",currentUser.id),
+
+    db.from("follows").select("id",{count:"exact",head:true})
+      .eq("follower_id",currentUser.id),
+
+    db.from("market_ads").select("id",{count:"exact",head:true})
+      .eq("user_id",currentUser.id)
+  ]);
+
+  const errors = [posts,followers,following,ads].filter(x => x.error);
+  if (errors.length) {
+    console.warn("Statistics:",errors.map(x => x.error.message));
+  }
+
+  const postCount = posts.error ? 0 : posts.count || 0;
+  const followerCount = followers.error ? 0 : followers.count || 0;
+  const followingCount = following.error ? 0 : following.count || 0;
+  const adCount = ads.error ? 0 : ads.count || 0;
+
+  $("postsCount").textContent = postCount;
+  $("followersCount").textContent = followerCount;
+  $("followingCount").textContent = followingCount;
+
+  $("postsTotal").textContent = postCount;
+  $("followersTotal").textContent = followerCount;
+  $("followingTotal").textContent = followingCount;
+  $("adsTotal").textContent = adCount;
+}
+
+async function loadPosts() {
+  const {data,error} = await db.from("posts")
+    .select("id,content,image_url,created_at")
+    .eq("user_id",currentUser.id)
+    .order("created_at",{ascending:false})
+    .limit(60);
+
+  if (error) throw error;
+
+  userPosts = data || [];
+
+  $("postsGrid").innerHTML = userPosts.length
+    ? userPosts.map(post => `
+      <article class="item">
+        ${post.image_url
+          ? `<img src="${esc(post.image_url)}" loading="lazy" alt="منشور">`
+          : `<div style="aspect-ratio:1/1;padding:9px;font-size:12px;line-height:1.6;overflow:hidden">${esc(post.content || "منشور فلاحي")}</div>`}
+        <div class="item-info">
+          <strong>منشور فلاحي</strong>
+          ${esc((post.content || "").slice(0,75))}
+          <div style="color:#849087">${post.created_at ? new Date(post.created_at).toLocaleDateString("ar") : ""}</div>
+        </div>
+      </article>
+    `).join("")
+    : '<div class="empty" style="grid-column:1/-1">🌱 لم تنشر أي منشور بعد.<br>شارك تجربتك مع الفلاحين!</div>';
+}
+
+async function loadAds() {
+  const {data,error} = await db.from("market_ads")
+    .select("id,title,category,description,price,city,image_url,status,created_at")
+    .eq("user_id",currentUser.id)
+    .order("created_at",{ascending:false})
+    .limit(60);
+
+  if (error) throw error;
+
+  userAds = data || [];
+
+  $("adsGrid").innerHTML = userAds.length
+    ? userAds.map(ad => `
+      <article class="item">
+        ${ad.image_url
+          ? `<img src="${esc(ad.image_url)}" loading="lazy" alt="إعلان">`
+          : `<div style="aspect-ratio:1/1;display:grid;place-items:center;font-size:35px;background:#edf5ef">🛒</div>`}
+        <div class="item-info">
+          <strong>${esc(ad.title || "إعلان")}</strong>
+          ${esc(ad.category || "")}
+          <div>${ad.price != null ? esc(ad.price) + " درهم" : "الثمن غير محدد"}</div>
+          <div>${esc(ad.city || "")}</div>
+          <div style="color:${ad.status === "active" ? "#176b45" : "#b66a20"}">
+            ${ad.status === "active" ? "● نشط" : "● غير نشط"}
+          </div>
+        </div>
+      </article>
+    `).join("")
+    : '<div class="empty" style="grid-column:1/-1">🛒 ما عندك حتى إعلان في السوق حالياً.</div>';
+}
+
+async function uploadAvatar(file) {
+  if (!file || !file.type.startsWith("image/")) {
+    throw new Error("اختار ملف صورة صحيح.");
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("الصورة خاصها تكون أقل من 5 ميغابايت.");
+  }
+
+  const {data,error} = await db.auth.getSession();
+  if (error) throw error;
+
+  const token = data?.session?.access_token;
+  if (!token) throw new Error("انتهت جلسة الدخول. سجل الدخول من جديد.");
+
+  const ext = (file.name.split(".").pop() || "jpg")
+    .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
+
+  const path = `${currentUser.id}/account-${Date.now()}.${ext}`;
+  const safePath = path.split("/").map(encodeURIComponent).join("/");
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/fellahi-images/${safePath}`,
+    {
+      method:"POST",
+      headers:{
+        "apikey":SUPABASE_KEY,
+        "Authorization":`Bearer ${token}`,
+        "Content-Type":file.type,
+        "x-upsert":"true"
+      },
+      body:file
+    }
+  );
+
+  const text = await response.text();
+  let result = {};
+
+  try {
+    result = text ? JSON.parse(text) : {};
+  } catch (_) {
+    throw new Error("خادم الصور لم يرجع استجابة صحيحة. HTTP " + response.status);
+  }
+
+  if (!response.ok) {
+    throw new Error(result.message || result.error || "فشل رفع الصورة.");
+  }
+
+  const publicUrl = db.storage.from("fellahi-images").getPublicUrl(path)
+    ?.data?.publicUrl;
+
+  if (!publicUrl) throw new Error("تعذر إنشاء رابط الصورة.");
+
+  return publicUrl;
+}
+
+$("editButton").onclick = () => {
+  $("editForm").classList.toggle("show");
+  $("editForm").scrollIntoView({behavior:"smooth",block:"start"});
+};
+
+$("cancelButton").onclick = () => {
+  $("editForm").classList.remove("show");
+  if (profile) showProfile(profile);
+  $("avatarFile").value = "";
+};
+
+$("avatarFile").onchange = () => {
+  const file = $("avatarFile").files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+    message("اختار صورة أقل من 5 ميغابايت.");
+    $("avatarFile").value = "";
+    return;
+  }
+
+  $("avatarPreview").src = URL.createObjectURL(file);
+};
+
+$("saveButton").onclick = async () => {
+  if (!currentUser) return;
+
+  const full_name = $("nameInput").value.trim();
+  const city = $("cityInput").value.trim();
+  const bio = $("bioInput").value.trim();
+  const crops = $("cropsInput").value
+    .split(/[،,]/).map(x => x.trim()).filter(Boolean);
+
+  if (!full_name) return message("المرجو إدخال الاسم.");
+
+  const button = $("saveButton");
+  button.disabled = true;
+  button.textContent = "جاري الحفظ...";
+
+  try {
+    let avatar_url = profile?.avatar_url || null;
+    const file = $("avatarFile").files[0];
+
+    if (file) {
+      message("جاري رفع الصورة...");
+      avatar_url = await uploadAvatar(file);
+    }
+
+    const {data,error} = await db.from("profiles")
+      .upsert({
+        id:currentUser.id,
+        full_name,
+        city,
+        bio,
+        crops,
+        avatar_url
+      },{onConflict:"id"})
+      .select("id,full_name,city,bio,crops,avatar_url")
+      .single();
+
+    if (error) throw error;
+
+    profile = data;
+
+    await db.auth.updateUser({data:{full_name}});
+
+    showProfile(data);
+    $("avatarFile").value = "";
+    $("editForm").classList.remove("show");
+
+    message("تم تحديث حسابك بنجاح 🌱");
+  } catch (error) {
+    console.error(error);
+    message("تعذر حفظ الحساب: " + (error.message || error));
+  } finally {
+    button.disabled = false;
+    button.textContent = "حفظ التغييرات";
+  }
+};
+
+document.querySelectorAll(".tab").forEach(button => {
+  button.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x =>
+      x.classList.toggle("active",x === button)
+    );
+
+    const posts = button.dataset.section === "posts";
+    $("postsSection").style.display = posts ? "block" : "none";
+    $("adsSection").style.display = posts ? "none" : "block";
+  };
+});
+
+async function start() {
+  try {
+    const {data,error} = await db.auth.getUser();
+    if (error) throw error;
+
+    currentUser = data.user;
+
+    if (!currentUser) {
+      message("خاصك تسجل الدخول أولاً من واجهة فلاحي.");
+      return;
+    }
+
+    await loadProfile();
+
+    const results = await Promise.allSettled([
+      loadStatistics(),
+      loadPosts(),
+      loadAds()
+    ]);
+
+    const failed = results.filter(x => x.status === "rejected");
+    if (failed.length) {
+      console.warn("بعض بيانات الحساب لم تحمل:",failed);
+      message("تم تحميل الحساب، لكن تعذر تحميل بعض الإحصائيات أو المحتويات.");
+    } else {
+      message("مرحباً بك في حسابك 🌱");
+    }
+
+  } catch (error) {
+    console.error("Account startup:",error);
+    message("تعذر تحميل الحساب: " + (error.message || error));
+  }
+}
+
+db.auth.onAuthStateChange((event,session) => {
+  if (event === "SIGNED_IN" && session?.user) {
+    currentUser = session.user;
+    start();
+  }
+
+  if (event === "SIGNED_OUT") {
+    currentUser = null;
+    message("تم تسجيل الخروج. سجل الدخول من جديد.");
+  }
+});
+
+start();
+
+})();
+</script>
+</body>
+</html>
