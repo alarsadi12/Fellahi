@@ -32,7 +32,6 @@ a{color:inherit}
 <div class="card">
 <h3>➕ نشر إعلان جديد</h3>
 <p id="hint">السوق الفلاحي</p>
-
 <input id="title" placeholder="اسم المنتج">
 
 <select id="category">
@@ -77,15 +76,7 @@ a{color:inherit}
 <script>
 const db = window.supabase.createClient(
   "https://kldxlodykkomkresegyt.supabase.co",
-  "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ",
-  {
-    auth: {
-      storageKey: "sb-kldxlodykkomkresegyt-auth-token",
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
-  }
+  "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ"
 );
 
 const $ = id => document.getElementById(id);
@@ -108,7 +99,6 @@ function esc(v) {
   })[c]);
 }
 
-// تحميل الإعلانات
 async function loadAds() {
   const { data, error } = await db
     .from("market_ads")
@@ -125,7 +115,6 @@ async function loadAds() {
   renderAds();
 }
 
-// عرض الإعلانات
 function renderAds() {
   const q = $("search").value.toLowerCase().trim();
   const cat = $("filter").value;
@@ -160,14 +149,11 @@ function renderAds() {
       '<p>' + esc(a.description || "") + '</p>' +
       '<div class="price">' +
       (a.price !== null ? esc(a.price) + " درهم" : "الثمن عند التواصل") +
-      '</div>' +
-      phone +
-      ownerButtons +
+      '</div>' + phone + ownerButtons +
       '</div>';
   }).join("");
 }
 
-// النشر والتعديل
 $("publish").onclick = async function() {
   if (!user) {
     message("سجل الدخول أولاً من المجتمع الفلاحي.");
@@ -307,7 +293,6 @@ $("publish").onclick = async function() {
   await loadAds();
 };
 
-// أزرار التعديل والحذف
 $("ads").onclick = async function(e) {
   const editButton = e.target.closest("[data-edit]");
   const deleteButton = e.target.closest("[data-delete]");
@@ -335,9 +320,7 @@ $("ads").onclick = async function(e) {
     $("image").value = "";
 
     $("publish").textContent = "حفظ التعديل";
-
     message("بدّل المعلومات ثم اضغط حفظ التعديل.");
-
     window.scrollTo(0, 0);
     return;
   }
@@ -350,9 +333,7 @@ $("ads").onclick = async function(e) {
 
     const deleteId = deleteButton.getAttribute("data-delete");
 
-    if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) {
-      return;
-    }
+    if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) return;
 
     const { error } = await db
       .from("market_ads")
@@ -370,11 +351,9 @@ $("ads").onclick = async function(e) {
   }
 };
 
-// البحث والتصفية
 $("search").oninput = renderAds;
 $("filter").onchange = renderAds;
 
-// التعرف على المستخدم
 async function startMarket() {
   const { data, error } = await db.auth.getSession();
 
