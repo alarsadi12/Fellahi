@@ -1,4 +1,4 @@
-// مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة + نظام المتابعة
+// مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة + المتابعة + الإشعارات
 (() => {
   "use strict";
 
@@ -72,6 +72,15 @@
       .fc-icon-btn{
         border:0;background:#f0f5f1;border-radius:50%;
         width:39px;height:39px;font-size:19px;cursor:pointer;
+        position:relative;
+      }
+      .fc-notification-badge{
+        position:absolute;top:-4px;right:-5px;
+        min-width:18px;height:18px;padding:0 4px;
+        border-radius:20px;background:#e34252;color:white;
+        font-size:10px;font-weight:900;display:flex;
+        align-items:center;justify-content:center;
+        border:2px solid white;
       }
       .fc-message{
         margin:8px 12px;color:#176b45;font-size:12px;
@@ -250,6 +259,39 @@
       }
       .fc-follow-user strong{font-size:13px}
       .fc-follow-user small{display:block;color:#87938b;font-size:11px;margin-top:3px}
+
+      /* تصميم الإشعارات */
+      .fc-notifications{
+        background:#fff;min-height:55vh;
+      }
+      .fc-notifications-head{
+        display:flex;align-items:center;justify-content:space-between;
+        gap:8px;padding:13px;border-bottom:1px solid var(--ig-border);
+      }
+      .fc-notifications-head h3{
+        margin:0;color:#176b45;font-size:17px;
+      }
+      .fc-notification-item{
+        display:flex;align-items:center;gap:10px;padding:13px;
+        border-bottom:1px solid #edf1ed;cursor:pointer;
+      }
+      .fc-notification-item.unread{
+        background:#edf7ef;
+      }
+      .fc-notification-item:active{background:#e4f0e7}
+      .fc-notification-info{flex:1;min-width:0;font-size:13px;line-height:1.7}
+      .fc-notification-info strong{color:#183329}
+      .fc-notification-time{display:block;color:#87938b;font-size:10px;margin-top:3px}
+      .fc-notification-dot{
+        width:9px;height:9px;border-radius:50%;
+        background:#176b45;flex-shrink:0;
+      }
+      .fc-notification-symbol{
+        width:34px;height:34px;border-radius:50%;
+        display:grid;place-items:center;background:#f0f5f1;
+        flex-shrink:0;font-size:17px;
+      }
+
       @media(min-width:620px){
         #community-app{max-width:650px;margin:0 auto;border-left:1px solid #e8eee9;border-right:1px solid #e8eee9}
         .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
@@ -266,6 +308,10 @@
       </div>
       <div class="fc-top-actions">
         <button class="fc-icon-btn" id="fc-search-toggle" title="بحث">⌕</button>
+        <button class="fc-icon-btn" id="fc-notifications-button" title="الإشعارات">
+          🔔
+          <span id="fc-notification-count" class="fc-notification-badge fc-hidden">0</span>
+        </button>
         <button class="fc-icon-btn" id="fc-profile-shortcut" title="ملفي">👤</button>
       </div>
     </div>
@@ -333,6 +379,7 @@
       <div id="fc-feed"></div>
     </div>
 
+    <div id="fc-notifications-panel" class="fc-hidden"></div>
     <div id="fc-public-profile" class="fc-hidden"></div>
     <div id="fc-post-detail" class="fc-hidden"></div>
 
@@ -377,14 +424,19 @@
     }
   };
 
+  function hideMainPanels() {
+    $("fc-profile-panel").classList.add("fc-hidden");
+    $("fc-public-profile").classList.add("fc-hidden");
+    $("fc-post-detail").classList.add("fc-hidden");
+    $("fc-notifications-panel").classList.add("fc-hidden");
+  }
+
   function setTab(tab) {
     document.querySelectorAll("#fc-bottom-nav button").forEach(b => {
       b.classList.toggle("active", b.dataset.tab === tab);
     });
 
-    $("fc-profile-panel").classList.add("fc-hidden");
-    $("fc-public-profile").classList.add("fc-hidden");
-    $("fc-post-detail").classList.add("fc-hidden");
+    hideMainPanels();
 
     if (tab === "feed") {
       $("fc-search-box").classList.add("fc-hidden");
@@ -468,6 +520,234 @@
     $("fc-image-preview").append(img);
   };
 
+  // =========================
+  // نظام الإشعارات
+  // =========================
+
+  function notificationText(type) {
+    if (type === "follow") return "بدأ بمتابعتك.";
+    if (type === "like") return "أعجبه منشورك.";
+    if (type === "comment") return "علّق على منشورك.";
+    return "لديك إشعار جديد.";
+  }
+
+  function notificationIcon(type) {
+    if (type === "follow") return "👤";
+    if (type === "like") return "❤️";
+    if (type === "comment") return "💬";
+    return "🔔";
+  }
+
+  function notificationDate(date) {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleString("ar");
+    } catch (e) {
+      return "";
+    }
+  }
+
+  async function updateNotificationCount() {
+    if (!currentUser) {
+      $("fc-notification-count").classList.add("fc-hidden");
+      $("fc-notification-count").textContent = "0";
+      return;
+    }
+
+    const {count,error} = await db.from("notifications")
+      .select("id",{count:"exact",head:true})
+      .eq("recipient_id",currentUser.id)
+      .eq("is_read",false);
+
+    if (error) {
+      console.warn("تعذر تحميل عدد الإشعارات:",error.message);
+      return;
+    }
+
+    const badge = $("fc-notification-count");
+    badge.textContent = count > 99 ? "99+" : String(count || 0);
+    badge.classList.toggle("fc-hidden",!count);
+  }
+
+  async function markNotificationRead(notificationId) {
+    if (!currentUser) return;
+
+    const {error} = await db.from("notifications")
+      .update({is_read:true})
+      .eq("id",notificationId)
+      .eq("recipient_id",currentUser.id);
+
+    if (error) {
+      console.warn("تعذر تحديد الإشعار كمقروء:",error.message);
+    }
+
+    await updateNotificationCount();
+  }
+
+  async function markAllNotificationsRead() {
+    if (!currentUser) return;
+
+    const button = $("fc-notifications-read-all");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "جاري التحديث...";
+    }
+
+    const {error} = await db.from("notifications")
+      .update({is_read:true})
+      .eq("recipient_id",currentUser.id)
+      .eq("is_read",false);
+
+    if (error) {
+      msg("تعذر تحديث الإشعارات: " + error.message);
+    } else {
+      msg("تم تحديد جميع الإشعارات كمقروءة.");
+      await openNotifications();
+    }
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = "تحديد الكل كمقروء";
+    }
+  }
+
+  async function openNotifications() {
+    if (!currentUser) return msg("سجل الدخول أولاً للاطلاع على الإشعارات.");
+
+    hideMainPanels();
+    $("fc-user").classList.add("fc-hidden");
+    $("fc-search-box").classList.add("fc-hidden");
+    $("fc-notifications-panel").classList.remove("fc-hidden");
+
+    const panel = $("fc-notifications-panel");
+    panel.innerHTML = '<div class="fc-empty">جاري تحميل الإشعارات...</div>';
+
+    try {
+      const {data,error} = await db.from("notifications")
+        .select("id,recipient_id,actor_id,type,post_id,is_read,created_at")
+        .eq("recipient_id",currentUser.id)
+        .order("created_at",{ascending:false})
+        .limit(100);
+
+      if (error) throw error;
+
+      const notifications = data || [];
+      const actorIds = [...new Set(
+        notifications.map(n => n.actor_id).filter(Boolean)
+      )];
+
+      await getProfiles(actorIds);
+
+      panel.innerHTML = `
+        <div class="fc-notifications">
+          <div class="fc-notifications-head">
+            <h3>🔔 الإشعارات</h3>
+            <button class="fc-btn fc-light" id="fc-notifications-read-all"
+              style="font-size:11px;padding:8px">
+              تحديد الكل كمقروء
+            </button>
+          </div>
+
+          <button class="fc-profile-edit" id="fc-notifications-back"
+            style="margin:10px;width:calc(100% - 20px)">
+            ← العودة للمنشورات
+          </button>
+
+          ${notifications.length ? notifications.map(n => {
+            const actor = profilesCache[n.actor_id] || {};
+            const actorName = actor.full_name || "مستخدم";
+            return `
+              <div class="fc-notification-item ${n.is_read ? "" : "unread"}"
+                data-notification="${esc(n.id)}">
+                ${avatar(actor.avatar_url,actorName)}
+                <div class="fc-notification-info">
+                  <strong>${esc(actorName)}</strong>
+                  ${esc(notificationText(n.type))}
+                  <span class="fc-notification-time">${esc(notificationDate(n.created_at))}</span>
+                </div>
+                <div class="fc-notification-symbol">${notificationIcon(n.type)}</div>
+                ${n.is_read ? "" : '<span class="fc-notification-dot"></span>'}
+              </div>
+            `;
+          }).join("") : `
+            <div class="fc-empty">
+              🔔<br>
+              لا توجد إشعارات حالياً.<br>
+              ستظهر هنا التفاعلات الجديدة مع حسابك ومنشوراتك.
+            </div>
+          `}
+        </div>
+      `;
+
+      $("fc-notifications-back").onclick = () => setTab("feed");
+      $("fc-notifications-read-all").onclick = markAllNotificationsRead;
+
+      panel.querySelectorAll("[data-notification]").forEach(item => {
+        item.onclick = async () => {
+          const notification = notifications.find(
+            n => String(n.id) === item.dataset.notification
+          );
+
+          if (!notification) return;
+
+          await markNotificationRead(notification.id);
+          panel.classList.add("fc-hidden");
+
+          if (notification.type === "follow" && notification.actor_id) {
+            await openProfile(notification.actor_id);
+            return;
+          }
+
+          if (notification.post_id) {
+            try {
+              const {data:post,error:postError} = await db.from("posts")
+                .select("*")
+                .eq("id",notification.post_id)
+                .maybeSingle();
+
+              if (postError) throw postError;
+
+              if (!post) {
+                msg("هذا المنشور لم يعد متاحاً.");
+                setTab("feed");
+                return;
+              }
+
+              await getProfiles([post.user_id]);
+              const author = profilesCache[post.user_id] || {};
+              $("fc-user").classList.add("fc-hidden");
+              $("fc-public-profile").classList.add("fc-hidden");
+              $("fc-post-detail").classList.remove("fc-hidden");
+              openPostDetail(post,author);
+            } catch (e) {
+              msg("تعذر فتح المنشور: " + e.message);
+              setTab("feed");
+            }
+          } else {
+            setTab("feed");
+          }
+        };
+      });
+
+      await updateNotificationCount();
+
+    } catch (e) {
+      panel.innerHTML = `
+        <div class="fc-empty">
+          تعذر تحميل الإشعارات.<br>
+          ${esc(e.message)}
+          <button class="fc-profile-edit" id="fc-notifications-error-back">رجوع</button>
+        </div>
+      `;
+
+      $("fc-notifications-error-back").onclick = () => setTab("feed");
+    }
+
+    window.scrollTo({top:root.offsetTop,behavior:"smooth"});
+  }
+
+  $("fc-notifications-button").onclick = openNotifications;
+
   // تحميل المستخدم وإنشاء ملفه الشخصي عند الحاجة
   async function refreshUser() {
     const {data,error} = await db.auth.getUser();
@@ -526,6 +806,8 @@
 
         $("fc-compose-avatar").innerHTML =
           avatar(profile?.avatar_url,profile?.full_name);
+
+        await updateNotificationCount();
       }
     }
 
@@ -535,6 +817,8 @@
     if (!currentUser) {
       $("fc-profile-panel").classList.add("fc-hidden");
       $("fc-compose-avatar").innerHTML = "";
+      $("fc-notifications-panel").classList.add("fc-hidden");
+      await updateNotificationCount();
     }
 
     await loadPosts();
@@ -939,6 +1223,7 @@
     $("fc-profile-panel").classList.add("fc-hidden");
     $("fc-post-detail").classList.add("fc-hidden");
     $("fc-publish").classList.add("fc-hidden");
+    $("fc-notifications-panel").classList.add("fc-hidden");
 
     const panel = $("fc-public-profile");
     panel.classList.remove("fc-hidden");
@@ -982,7 +1267,6 @@
         likes = result.data || [];
       }
 
-      const totalLikes = likes.length;
       const crops = Array.isArray(profile.crops) ? profile.crops : [];
       const own = currentUser?.id === userId;
 
@@ -1090,6 +1374,8 @@
   function openPostDetail(post,profile) {
     const detail = $("fc-post-detail");
     detail.classList.remove("fc-hidden");
+    $("fc-public-profile").classList.add("fc-hidden");
+    $("fc-notifications-panel").classList.add("fc-hidden");
 
     detail.innerHTML = `
       <div class="fc-box">
