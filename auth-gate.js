@@ -157,20 +157,33 @@
       padding: 25px;
     }
 
+    /* تسجيل الخروج داخل القائمة الجانبية فقط */
     #fellahi-logout-button {
-      position: fixed;
-      z-index: 999990;
-      left: 12px;
-      bottom: 85px;
-      border: 0;
-      border-radius: 30px;
-      padding: 10px 15px;
-      background: #176b45;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 3px 12px #0002;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      padding: 12px 10px;
+      margin-top: 12px;
+      border: 1px solid #f3d9d6;
+      border-radius: 12px;
+      background: #fff5f4;
+      color: #b52d20;
+      text-align: right;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
-      display: none;
+    }
+
+    #fellahi-logout-button span {
+      width: 28px;
+      text-align: center;
+      font-size: 19px;
+    }
+
+    #fellahi-logout-button:disabled {
+      opacity: .6;
+      cursor: wait;
     }
 
     body.fellahi-auth-locked {
@@ -396,28 +409,41 @@
     }
   }
 
+  // إضافة زر الخروج إلى الشريط الجانبي في الصفحة الرئيسية
   function createLogoutButton() {
-    if (document.getElementById("fellahi-logout-button")) return;
+    const drawer = document.getElementById("drawer");
 
-    const button = document.createElement("button");
+    // الصفحات الأخرى لا تتوفر على القائمة الجانبية، لذلك لا نضيف زرّاً عائماً.
+    if (!drawer) return;
+
+    let button = document.getElementById("fellahi-logout-button");
+
+    if (button && button.parentElement === drawer) return;
+
+    if (button) button.remove();
+
+    button = document.createElement("button");
     button.id = "fellahi-logout-button";
     button.type = "button";
-    button.textContent = "تسجيل الخروج";
+    button.innerHTML = "<span>🚪</span>تسجيل الخروج";
 
     button.addEventListener("click", async () => {
       if (!confirm("هل تريد تسجيل الخروج؟")) return;
 
       button.disabled = true;
 
-      const { error } = await db.auth.signOut();
+      try {
+        const { error } = await db.auth.signOut();
 
-      if (error) {
+        if (error) throw error;
+
+      } catch (error) {
         alert("تعذر تسجيل الخروج: " + error.message);
         button.disabled = false;
       }
     });
 
-    document.body.appendChild(button);
+    drawer.appendChild(button);
   }
 
   async function start() {
@@ -450,8 +476,6 @@
       if (data.session) {
         removeGate();
         createLogoutButton();
-        document.getElementById("fellahi-logout-button").style.display =
-          "block";
       } else {
         createGate();
         renderForm();
@@ -461,11 +485,9 @@
         if (session) {
           removeGate();
           createLogoutButton();
-          document.getElementById("fellahi-logout-button").style.display =
-            "block";
         } else {
           const logout = document.getElementById("fellahi-logout-button");
-          if (logout) logout.style.display = "none";
+          if (logout) logout.remove();
 
           createGate();
           renderForm();
