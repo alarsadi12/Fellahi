@@ -1,26 +1,30 @@
 {
-"id": "/Fellahi/",
-"name": "فلاحي 2.0 - Fellahi",
-"short_name": "فلاحي",
-"description": "فلاحي 2.0 منصة زراعية ذكية تساعد الفلاحين على حساب التسميد وتنظيم السقي ومتابعة المحاصيل والاستفادة من المساعد الذكي والمجتمع والسوق الفلاحي.",
-"start_url": "/Fellahi/",
-"scope": "/Fellahi/",
-"display": "standalone",
-"background_color": "#f5f8f5",
-"theme_color": "#176b45",
-"lang": "ar",
-"dir": "rtl",
-"categories": [
-"education",
-"utilities",
-"productivity"
-],
-"icons": [
-{
-"src": "icon.svg",
-"sizes": "any",
-"type": "image/svg+xml",
-"purpose": "any"
-}
-]
+  "id": "/Fellahi/",
+  "name": "فلاحي 2.0 - Fellahi",
+  "short_name": "فلاحي",
+  "description": "منصة زراعية ذكية للتسميد والسقي ومتابعة المحاصيل والمجتمع والسوق الفلاحي.",
+  "start_url": "/Fellahi/",
+  "scope": "/Fellahi/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "prefer_related_applications": false,
+  "background_color": "#f5f8f5",
+  "theme_color": "#176b45",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
