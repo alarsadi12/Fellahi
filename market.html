@@ -30,6 +30,8 @@ a{color:inherit}
 .post-actions button.liked{background:#fff0f0;color:#d12c45}
 .post-actions button:active{transform:scale(.98)}
 .comments-area{padding-top:12px}
+.toggle-comments{width:100%;background:#f0f2f5;color:#176b45;margin-top:10px}
+.comments-content{padding-top:12px}
 .comments-title{font-weight:bold;margin-bottom:10px}
 .comment{display:flex;gap:8px;margin:12px 0;align-items:flex-start}
 .comment-avatar{width:32px;height:32px;flex-shrink:0;border-radius:50%;background:#e8f1eb;display:flex;align-items:center;justify-content:center}
@@ -124,6 +126,7 @@ let allComments = [];
 let allLikes = [];
 let allNotifications = [];
 let editingAdId = null;
+let openCommentAds = new Set();
 
 function message(t) {
   $("message").textContent = t;
@@ -260,6 +263,7 @@ function renderAds() {
     const comments = allComments.filter(c => c.ad_id === a.id);
     const likes = allLikes.filter(l => l.ad_id === a.id);
     const liked = user && likes.some(l => l.user_id === user.id);
+    const commentsOpen = openCommentAds.has(a.id);
 
     const phone = a.phone
       ? '<p>📞 <a href="tel:' + esc(a.phone) + '">' + esc(a.phone) + '</a></p>'
@@ -325,8 +329,16 @@ function renderAds() {
       '</div>' +
 
       '<section class="comments-area">' +
+      '<button class="toggle-comments" data-toggle-comments="' + esc(a.id) + '">' +
+      (commentsOpen ? '🔼 إخفاء التعليقات' : '💬 عرض التعليقات') +
+      ' (' + comments.length + ')' +
+      '</button>' +
+
+      '<div class="comments-content" id="comments-' + esc(a.id) +
+      '" style="display:' + (commentsOpen ? 'block' : 'none') + '">' +
       '<div class="comments-title">💬 التعليقات</div>' +
       commentHtml + commentForm +
+      '</div>' +
       '</section>' +
 
       ownerButtons +
@@ -460,8 +472,22 @@ $("ads").onclick = async function(e) {
   const commentButton = e.target.closest("[data-comment-submit]");
   const commentDelete = e.target.closest("[data-comment-delete]");
   const focusComment = e.target.closest("[data-focus-comment]");
+  const toggleComments = e.target.closest("[data-toggle-comments]");
   const editButton = e.target.closest("[data-edit]");
   const deleteButton = e.target.closest("[data-delete]");
+
+  if (toggleComments) {
+    const id = toggleComments.dataset.toggleComments;
+
+    if (openCommentAds.has(id)) {
+      openCommentAds.delete(id);
+    } else {
+      openCommentAds.add(id);
+    }
+
+    renderAds();
+    return;
+  }
 
   if (likeButton) {
     if (!user) {
@@ -494,7 +520,14 @@ $("ads").onclick = async function(e) {
 
   if (focusComment) {
     const id = focusComment.dataset.focusComment;
-    const box = document.querySelector('[data-comment-input="' + id + '"]');
+
+    openCommentAds.add(id);
+    renderAds();
+
+    const box = document.querySelector(
+      '[data-comment-input="' + id + '"]'
+    );
+
     if (box) {
       box.focus();
       box.scrollIntoView({behavior:"smooth",block:"center"});
@@ -537,6 +570,7 @@ $("ads").onclick = async function(e) {
       return;
     }
 
+    openCommentAds.add(adId);
     message("تم إرسال تعليقك بنجاح.");
     await loadAds();
     await loadNotifications();
@@ -601,6 +635,7 @@ $("ads").onclick = async function(e) {
       return;
     }
 
+    openCommentAds.delete(id);
     message("تم حذف الإعلان بنجاح.");
     await loadAds();
     await loadNotifications();
