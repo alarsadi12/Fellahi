@@ -1,4 +1,3 @@
-
 // مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
 (() => {
   "use strict";
@@ -21,58 +20,6 @@
   }
 
   const $ = id => document.getElementById(id);
-  const hiddenElements = [];
-  const oldBack = communitySection?.querySelector('.back[data-go="home"]');
-
-  function hideElement(el) {
-    if (!el || ["SCRIPT", "STYLE"].includes(el.tagName)) return;
-    if (hiddenElements.some(item => item.el === el)) return;
-
-    hiddenElements.push({
-      el,
-      display: el.style.display
-    });
-
-    el.style.display = "none";
-  }
-
-  // إصلاح تعريف الدالة التي كانت تسبب الصفحة البيضاء
-  function enterCommunityMode() {
-    if (!communitySection) return;
-
-    [...communitySection.children].forEach(el => {
-      if (el !== root) hideElement(el);
-    });
-
-    let current = communitySection;
-
-    while (current.parentElement) {
-      const parent = current.parentElement;
-
-      [...parent.children].forEach(el => {
-        if (el !== current) hideElement(el);
-      });
-
-      if (parent === document.body) break;
-      current = parent;
-    }
-  }
-
-  function leaveCommunityMode() {
-    hiddenElements.forEach(item => {
-      item.el.style.display = item.display;
-    });
-
-    hiddenElements.length = 0;
-
-    if (oldBack) {
-      oldBack.click();
-    } else {
-      const homeButton = document.querySelector('[data-go="home"]');
-      if (homeButton) homeButton.click();
-    }
-  }
-
   let currentUser = null;
   let isAdmin = false;
   let phonePending = false;
@@ -402,10 +349,17 @@
     </div>
   `;
 
-  // تشغيل وضع المجتمع بعد بناء الواجهة
-  enterCommunityMode();
+  // مهم: لا نشغل enterCommunityMode هنا حتى لا تختفي الصفحة الرئيسية.
 
-  $("fc-back-app").onclick = leaveCommunityMode;
+  $("fc-back-app").onclick = () => {
+    const backButton = communitySection?.querySelector('.back[data-go="home"]');
+    if (backButton) {
+      backButton.click();
+    } else {
+      const homeButton = document.querySelector('[data-go="home"]');
+      if (homeButton) homeButton.click();
+    }
+  };
 
   function setTab(tab) {
     document.querySelectorAll("#fc-bottom-nav button").forEach(b => {
