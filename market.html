@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -12,7 +13,7 @@ main{max-width:700px;margin:auto;padding:15px}
 .card{background:white;padding:16px;border-radius:15px;margin:14px 0}
 input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:9px;font:inherit}
 textarea{min-height:80px}
-button{background:#176b45;color:white;border:0;border-radius:9px;padding:12px;width:100%;font-weight:bold}
+button{background:#176b45;color:white;border:0;border-radius:9px;padding:12px;width:100%;font-weight:bold;cursor:pointer}
 .ad{border-bottom:1px solid #ddd;padding:13px 0}
 .price{color:#176b45;font-weight:bold}
 small{color:#718078}
@@ -26,8 +27,9 @@ a{color:inherit}
 <p>بيع وشراء المنتجات والمعدات الفلاحية</p>
 <a href="index.html">← الرجوع إلى فلاحي 2.0</a>
 </header>
+
 <main>
-  <div class="card">
+<div class="card">
 <h3>➕ نشر إعلان جديد</h3>
 <p id="hint">السوق الفلاحي</p>
 
@@ -47,6 +49,7 @@ a{color:inherit}
 <input id="city" placeholder="المدينة أو المنطقة">
 <input id="phone" placeholder="رقم الهاتف">
 <input id="image" type="file" accept="image/*">
+
 <button id="publish">نشر الإعلان</button>
 <p id="message"></p>
 </div>
@@ -68,6 +71,7 @@ a{color:inherit}
 <div id="ads">جاري تحميل الإعلانات...</div>
 </div>
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -85,20 +89,26 @@ const db = window.supabase.createClient(
 );
 
 const $ = id => document.getElementById(id);
+
 let user = null;
 let allAds = [];
 let editingAdId = null;
+
 function message(t) {
   $("message").textContent = t;
 }
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[c]);
 }
 
+// تحميل الإعلانات
 async function loadAds() {
   const { data, error } = await db
     .from("market_ads")
@@ -115,6 +125,7 @@ async function loadAds() {
   renderAds();
 }
 
+// عرض الإعلانات
 function renderAds() {
   const q = $("search").value.toLowerCase().trim();
   const cat = $("filter").value;
@@ -141,17 +152,22 @@ function renderAds() {
       : "";
 
     return '<div class="ad">' +
-      (a.image_url ? '<img src="' + esc(a.image_url) + '" alt="' + esc(a.title) + '" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px">' : '') +
+      (a.image_url
+        ? '<img src="' + esc(a.image_url) + '" alt="' + esc(a.title) + '" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px">'
+        : '') +
       '<h3>' + esc(a.title) + '</h3>' +
       '<small>' + esc(a.category) + ' · ' + esc(a.city || "") + '</small>' +
       '<p>' + esc(a.description || "") + '</p>' +
       '<div class="price">' +
       (a.price !== null ? esc(a.price) + " درهم" : "الثمن عند التواصل") +
-      '</div>' + phone + ownerButtons +
+      '</div>' +
+      phone +
+      ownerButtons +
       '</div>';
   }).join("");
 }
 
+// النشر والتعديل
 $("publish").onclick = async function() {
   if (!user) {
     message("سجل الدخول أولاً من المجتمع الفلاحي.");
@@ -171,6 +187,11 @@ $("publish").onclick = async function() {
     return;
   }
 
+  if (priceValue !== "" && Number(priceValue) < 0) {
+    message("الثمن غير صالح.");
+    return;
+  }
+
   if (file && !file.type.startsWith("image/")) {
     message("اختار صورة فقط.");
     return;
@@ -181,9 +202,20 @@ $("publish").onclick = async function() {
     return;
   }
 
-  let imageUrl = editingAdId
-  ? (allAds.find(a => String(a.id) === String(editingAdId))?.image_url || null)
-  : null;
+  let imageUrl = null;
+
+  if (editingAdId) {
+    const oldAd = allAds.find(
+      a => String(a.id) === String(editingAdId)
+    );
+
+    if (!oldAd || oldAd.user_id !== user.id) {
+      message("تعذر العثور على إعلانك.");
+      return;
+    }
+
+    imageUrl = oldAd.image_url || null;
+  }
 
   if (file) {
     message("جاري رفع الصورة...");
@@ -209,68 +241,88 @@ $("publish").onclick = async function() {
     imageUrl = publicData.publicUrl;
   }
 
-  message("جاري نشر الإعلان...");
+  message("جاري حفظ الإعلان...");
 
   const adData = {
-  title,
-  category,
-  description,
-  price: priceValue === "" ? null : Number(priceValue),
-  city,
-  phone,
-  image_url: imageUrl,
-  status: "active"
+    title,
+    category,
+    description,
+    price: priceValue === "" ? null : Number(priceValue),
+    city,
+    phone,
+    image_url: imageUrl,
+    status: "active"
+  };
+
+  let error = null;
+
+  if (editingAdId) {
+    const result = await db
+      .from("market_ads")
+      .update(adData)
+      .eq("id", editingAdId)
+      .eq("user_id", user.id)
+      .select("id");
+
+    error = result.error;
+
+    if (!error && (!result.data || result.data.length === 0)) {
+      message("لم يتم تعديل الإعلان. تحقق من الصلاحيات.");
+      return;
+    }
+  } else {
+    const result = await db
+      .from("market_ads")
+      .insert({
+        ...adData,
+        user_id: user.id
+      });
+
+    error = result.error;
+  }
+
+  if (error) {
+    message("تعذر حفظ الإعلان: " + error.message);
+    return;
+  }
+
+  const wasEditing = !!editingAdId;
+
+  message(wasEditing
+    ? "تم تعديل الإعلان بنجاح!"
+    : "تم نشر الإعلان بنجاح!"
+  );
+
+  editingAdId = null;
+  $("publish").textContent = "نشر الإعلان";
+
+  $("title").value = "";
+  $("category").selectedIndex = 0;
+  $("description").value = "";
+  $("price").value = "";
+  $("city").value = "";
+  $("phone").value = "";
+  $("image").value = "";
+
+  await loadAds();
 };
 
-let error;
-
-if (editingAdId) {
-  const result = await db
-    .from("market_ads")
-    .update(adData)
-    .eq("id", editingAdId)
-    .eq("user_id", user.id);
-
-  error = result.error;
-} else {
-  const result = await db
-    .from("market_ads")
-    .insert({
-      ...adData,
-      user_id: user.id
-    });
-
-  error = result.error;
-}
-
-if (error) {
-  message("تعذر حفظ الإعلان: " + error.message);
-  return;
-}
-
-message(editingAdId ? "تم تعديل الإعلان بنجاح!" : "تم نشر الإعلان بنجاح!");
-
-editingAdId = null;
-$("publish").textContent = "نشر الإعلان";
-
-$("title").value = "";
-$("description").value = "";
-$("price").value = "";
-$("city").value = "";
-$("phone").value = "";
-$("image").value = "";
-
-await loadAds();
-};
+// أزرار التعديل والحذف
 $("ads").onclick = async function(e) {
   const editButton = e.target.closest("[data-edit]");
   const deleteButton = e.target.closest("[data-delete]");
 
   if (editButton) {
     const editId = editButton.getAttribute("data-edit");
-    const ad = allAds.find(a => String(a.id) === editId);
 
-    if (!ad || !user || ad.user_id !== user.id) return;
+    const ad = allAds.find(
+      a => String(a.id) === editId
+    );
+
+    if (!ad || !user || ad.user_id !== user.id) {
+      message("لا يمكنك تعديل هذا الإعلان.");
+      return;
+    }
 
     editingAdId = ad.id;
 
@@ -280,17 +332,27 @@ $("ads").onclick = async function(e) {
     $("price").value = ad.price ?? "";
     $("city").value = ad.city || "";
     $("phone").value = ad.phone || "";
+    $("image").value = "";
 
     $("publish").textContent = "حفظ التعديل";
+
     message("بدّل المعلومات ثم اضغط حفظ التعديل.");
+
     window.scrollTo(0, 0);
     return;
   }
 
   if (deleteButton) {
+    if (!user) {
+      message("سجل الدخول أولاً.");
+      return;
+    }
+
     const deleteId = deleteButton.getAttribute("data-delete");
 
-    if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) return;
+    if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) {
+      return;
+    }
 
     const { error } = await db
       .from("market_ads")
@@ -307,6 +369,28 @@ $("ads").onclick = async function(e) {
     await loadAds();
   }
 };
+
+// البحث والتصفية
+$("search").oninput = renderAds;
+$("filter").onchange = renderAds;
+
+// التعرف على المستخدم
+async function startMarket() {
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
+    message("تعذر التحقق من تسجيل الدخول: " + error.message);
+  }
+
+  user = data?.session?.user || null;
+
+  await loadAds();
+
+  db.auth.onAuthStateChange((_event, session) => {
+    user = session?.user || null;
+    renderAds();
+  });
+}
 
 startMarket();
 </script>
