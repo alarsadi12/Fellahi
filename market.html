@@ -236,7 +236,43 @@ $("publish").onclick = async function() {
 
   await loadAds();
 };
+$("ads").onclick = async function(e) {
+  const editId = e.target.getAttribute("data-edit");
+  const deleteId = e.target.getAttribute("data-delete");
 
+  if (editId) {
+    const ad = allAds.find(a => String(a.id) === editId);
+    if (!ad) return;
+
+    $("title").value = ad.title || "";
+    $("category").value = ad.category || "";
+    $("description").value = ad.description || "";
+    $("price").value = ad.price ?? "";
+    $("city").value = ad.city || "";
+    $("phone").value = ad.phone || "";
+
+    message("عدّل معلومات الإعلان ثم اضغط نشر الإعلان لإنشاء نسخة معدلة.");
+    return;
+  }
+
+  if (deleteId) {
+    if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) return;
+
+    const { error } = await db
+      .from("market_ads")
+      .delete()
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      message("تعذر حذف الإعلان: " + error.message);
+      return;
+    }
+
+    message("تم حذف الإعلان بنجاح.");
+    await loadAds();
+  }
+};
 $("search").oninput = renderAds;
 $("filter").onchange = renderAds;
 
