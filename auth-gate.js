@@ -1,3 +1,4 @@
+
 // فلاحي 2.0 — نظام تسجيل الدخول الموحد بتصميم احترافي
 (() => {
   "use strict";
@@ -209,13 +210,27 @@
       padding:25px;
     }
 
+    /* تثبيت زر تسجيل الخروج أسفل القائمة */
+    #drawer {
+      position:fixed !important;
+      box-sizing:border-box !important;
+      padding-bottom:100px !important;
+    }
+
     #fellahi-logout-button {
+      position:absolute;
+      right:17px;
+      left:17px;
+      bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index:30;
       display:flex;
       align-items:center;
+      justify-content:flex-start;
       gap:11px;
-      width:100%;
-      padding:12px 10px;
-      margin-top:12px;
+      width:calc(100% - 34px);
+      box-sizing:border-box;
+      padding:13px 12px;
+      margin:0;
       border:1px solid #f3d9d6;
       border-radius:12px;
       background:#fff5f4;
@@ -224,6 +239,7 @@
       font-size:14px;
       font-weight:700;
       cursor:pointer;
+      box-shadow:0 4px 14px rgba(0,0,0,.10);
     }
 
     #fellahi-logout-button span {
@@ -292,71 +308,48 @@
 
     gate.innerHTML = `
       <div class="auth-card">
-
         <div class="auth-hero">
-
           <svg viewBox="0 0 450 210" preserveAspectRatio="xMidYMid slice"
                xmlns="http://www.w3.org/2000/svg">
-
             <circle cx="355" cy="48" r="28" fill="#F5D98B" opacity=".95"/>
-
-            <path d="M0 120 Q90 55 180 115 T450 95 V210 H0Z"
-                  fill="#367C50"/>
-
-            <path d="M0 145 Q100 90 210 140 T450 125 V210 H0Z"
-                  fill="#75A95D"/>
-
-            <path d="M0 175 Q100 125 220 170 T450 155 V210 H0Z"
-                  fill="#B4D58B"/>
-
-            <path d="M0 195 Q130 160 250 190 T450 180 V210 H0Z"
-                  fill="#D6E9AD"/>
-
+            <path d="M0 120 Q90 55 180 115 T450 95 V210 H0Z" fill="#367C50"/>
+            <path d="M0 145 Q100 90 210 140 T450 125 V210 H0Z" fill="#75A95D"/>
+            <path d="M0 175 Q100 125 220 170 T450 155 V210 H0Z" fill="#B4D58B"/>
+            <path d="M0 195 Q130 160 250 190 T450 180 V210 H0Z" fill="#D6E9AD"/>
             <g fill="#E7F3D2" opacity=".8">
               <path d="M40 100 Q25 78 44 65 Q64 80 40 100Z"/>
               <path d="M60 105 Q58 78 82 75 Q87 99 60 105Z"/>
               <path d="M390 112 Q375 88 395 78 Q415 96 390 112Z"/>
             </g>
-
             <g stroke="#E8F5D8" stroke-width="2" opacity=".7" fill="none">
               <path d="M15 205 Q90 165 165 205"/>
               <path d="M180 205 Q270 155 360 205"/>
               <path d="M300 205 Q370 170 445 195"/>
             </g>
-
             <g fill="#D8F0C1">
               <path d="M110 145 Q95 120 112 108 Q132 124 110 145Z"/>
               <path d="M112 145 Q132 115 150 126 Q144 145 112 145Z"/>
               <path d="M112 145 V165" stroke="#D8F0C1" stroke-width="4"/>
             </g>
-
           </svg>
 
           <div class="hero-content">
             <div class="auth-logo">
               <svg viewBox="0 0 100 100" fill="none"
                    xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 83V43" stroke="#176b45"
-                  stroke-width="6" stroke-linecap="round"/>
-                <path d="M50 58C22 58 16 37 17 20C39 19 57 30 50 58Z"
-                  fill="#79BD68"/>
-                <path d="M51 46C54 20 73 12 89 14C91 37 76 52 51 46Z"
-                  fill="#176b45"/>
-                <path d="M25 77C37 70 63 70 75 77"
-                  stroke="#176b45" stroke-width="5"
-                  stroke-linecap="round"/>
-                <path d="M19 85H81" stroke="#176b45"
-                  stroke-width="5" stroke-linecap="round"/>
+                <path d="M50 83V43" stroke="#176b45" stroke-width="6" stroke-linecap="round"/>
+                <path d="M50 58C22 58 16 37 17 20C39 19 57 30 50 58Z" fill="#79BD68"/>
+                <path d="M51 46C54 20 73 12 89 14C91 37 76 52 51 46Z" fill="#176b45"/>
+                <path d="M25 77C37 70 63 70 75 77" stroke="#176b45" stroke-width="5" stroke-linecap="round"/>
+                <path d="M19 85H81" stroke="#176b45" stroke-width="5" stroke-linecap="round"/>
               </svg>
             </div>
             <h1>فلاحي 2.0</h1>
             <p>التكنولوجيا لخدمة الفلاح</p>
           </div>
-
         </div>
 
         <div class="auth-body">
-
           <div class="auth-intro">
             مرحباً بك في عالم فلاحي<br>
             أدواتك ومجتمعك وسوقك في مكان واحد
@@ -374,20 +367,17 @@
           </div>
 
           <form id="fellahi-auth-form">
-
             <div class="auth-field" id="fellahi-name-field"
               style="display:${currentMode === "signup" ? "block" : "none"}">
               <label>الاسم الكامل</label>
               <input id="fellahi-name" type="text"
-                placeholder="اكتب اسمك الكامل"
-                autocomplete="name">
+                placeholder="اكتب اسمك الكامل" autocomplete="name">
             </div>
 
             <div class="auth-field">
               <label>البريد الإلكتروني</label>
               <input id="fellahi-email" type="email"
-                placeholder="example@email.com"
-                autocomplete="email" required>
+                placeholder="example@email.com" autocomplete="email" required>
             </div>
 
             <div class="auth-field">
@@ -408,7 +398,6 @@
           <div class="auth-footer">
             🌱 فلاحي 2.0 — شريكك في كل خطوة زراعية
           </div>
-
         </div>
       </div>
     `;
@@ -480,7 +469,6 @@
           currentMode = "login";
           setTimeout(renderForm, 1800);
         }
-
       } else {
         result = await db.auth.signInWithPassword({
           email,
@@ -492,7 +480,6 @@
         showMessage("تم تسجيل الدخول بنجاح!", true);
         setTimeout(removeGate, 500);
       }
-
     } catch (error) {
       showMessage(
         error && error.message
@@ -513,7 +500,7 @@
     }
   }
 
-  // تسجيل الخروج داخل القائمة الجانبية فقط
+  // إنشاء زر تسجيل الخروج في أسفل القائمة
   function createLogoutButton() {
     const drawer = document.getElementById("drawer");
     if (!drawer) return;
@@ -545,6 +532,20 @@
     drawer.appendChild(button);
   }
 
+  // إعادة التأكد من وجود الزر إذا أعيد إنشاء القائمة
+  function watchDrawer() {
+    createLogoutButton();
+
+    const observer = new MutationObserver(() => {
+      if (db) createLogoutButton();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
   async function start() {
     createGate();
 
@@ -552,8 +553,7 @@
       if (!window.supabase) {
         await new Promise((resolve, reject) => {
           const script = document.createElement("script");
-          script.src =
-            "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+          script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
           script.onload = resolve;
           script.onerror = () =>
             reject(new Error("تعذر تحميل خدمة تسجيل الدخول."));
@@ -573,7 +573,7 @@
 
       if (data.session) {
         removeGate();
-        createLogoutButton();
+        watchDrawer();
       } else {
         createGate();
         renderForm();
@@ -582,7 +582,7 @@
       db.auth.onAuthStateChange((event, session) => {
         if (session) {
           removeGate();
-          createLogoutButton();
+          watchDrawer();
         } else {
           const logout = document.getElementById("fellahi-logout-button");
           if (logout) logout.remove();
