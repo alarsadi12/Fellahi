@@ -1,4 +1,4 @@
-// مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
+// مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة + نظام المتابعة
 (() => {
   "use strict";
 
@@ -20,6 +20,7 @@
   }
 
   const $ = id => document.getElementById(id);
+
   let currentUser = null;
   let isAdmin = false;
   let phonePending = false;
@@ -39,7 +40,6 @@
 
   const avatar = (url, name = "فلاح", size = "") => {
     const style = size ? `style="width:${size};height:${size}"` : "";
-
     return url
       ? `<img class="fc-avatar" ${style} src="${esc(url)}" alt="${esc(name)}">`
       : `<div class="fc-avatar fc-avatar-placeholder" ${style}>👨‍🌾</div>`;
@@ -199,6 +199,10 @@
       .fc-profile-stats{
         display:flex;justify-content:space-around;flex:1;text-align:center;
       }
+      .fc-profile-stats button{
+        border:0;background:transparent;padding:5px 2px;
+        cursor:pointer;color:inherit;font:inherit;min-width:0;
+      }
       .fc-profile-stats strong{display:block;font-size:18px}
       .fc-profile-stats span{font-size:11px;color:#7a877e}
       .fc-profile-name{font-size:16px;font-weight:900;margin:12px 0 3px}
@@ -219,7 +223,14 @@
       .fc-profile-edit{
         width:100%;margin-top:12px;background:#edf5ef;color:#176b45;
         border:0;border-radius:9px;padding:9px;font:inherit;font-weight:800;
+        cursor:pointer;
       }
+      .fc-follow-btn{
+        width:100%;margin-top:10px;background:#176b45;color:white;
+        border:0;border-radius:9px;padding:10px;font:inherit;
+        font-weight:800;cursor:pointer;
+      }
+      .fc-follow-btn.following{background:#edf5ef;color:#176b45}
       .fc-profile-panel{
         background:#fff;border:1px solid var(--ig-border);
         border-radius:14px;padding:14px;margin:12px 0;
@@ -233,6 +244,12 @@
       .fc-empty{text-align:center;padding:35px 15px;color:#7b887f;background:#fff;font-size:13px;line-height:2}
       .fc-detail-image{width:100%;max-height:500px;object-fit:contain;background:#f0f3f0;border-radius:10px}
       .fc-admin{padding:12px;background:#fff}
+      .fc-follow-user{
+        display:flex;align-items:center;gap:10px;padding:10px;
+        background:#fff;border-bottom:1px solid #edf1ed;cursor:pointer;
+      }
+      .fc-follow-user strong{font-size:13px}
+      .fc-follow-user small{display:block;color:#87938b;font-size:11px;margin-top:3px}
       @media(min-width:620px){
         #community-app{max-width:650px;margin:0 auto;border-left:1px solid #e8eee9;border-right:1px solid #e8eee9}
         .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
@@ -353,9 +370,8 @@
 
   $("fc-back-app").onclick = () => {
     const backButton = communitySection?.querySelector('.back[data-go="home"]');
-    if (backButton) {
-      backButton.click();
-    } else {
+    if (backButton) backButton.click();
+    else {
       const homeButton = document.querySelector('[data-go="home"]');
       if (homeButton) homeButton.click();
     }
@@ -488,9 +504,7 @@
         }
       }
 
-      if (profileError) {
-        msg("تعذر تحميل الملف الشخصي: " + profileError.message);
-      }
+      if (profileError) msg("تعذر تحميل الملف الشخصي: " + profileError.message);
 
       if (profile?.is_banned) {
         await db.auth.signOut();
@@ -759,7 +773,7 @@
 
   // تحميل بيانات الحسابات
   async function getProfiles(ids) {
-    const missing = ids.filter(id => id && !profilesCache[id]);
+    const missing = [...new Set(ids)].filter(id => id && !profilesCache[id]);
 
     if (missing.length) {
       const {data,error} = await db.from("profiles")
@@ -776,7 +790,149 @@
     return profilesCache;
   }
 
-  // فتح الملف الشخصي العام
+  // إحصائيات المتابعة
+  async function getFollowStats(userId) {
+    const [followersResult,followingResult] = await Promise.all([
+      db.from("follows")
+        .select("id",{count:"exact",head:true})
+        .eq("following_id",userId),
+      db.from("follows")
+        .select("id",{count:"exact",head:true})
+        .eq("follower_id",userId)
+    ]);
+
+    if (followersResult.error) throw followersResult.error;
+    if (followingResult.error) throw followingResult.error;
+
+    return {
+      followers:followersResult.count || 0,
+      following:followingResult.count || 0
+    };
+  }
+
+  // واش المستخدم الحالي كيتابع هاد الحساب؟
+  async function isFollowing(userId) {
+    if (!currentUser || currentUser.id === userId) return false;
+
+    const {data,error} = await db.from("follows")
+      .select("id")
+      .eq("follower_id",currentUser.id)
+      .eq("following_id",userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return !!data;
+  }
+
+  // متابعة أو إلغاء المتابعة
+  async function toggleFollow(userId,button) {
+    if (!currentUser) return msg("سجل الدخول أولاً باش تتابع الحسابات.");
+    if (currentUser.id === userId) return;
+
+    button.disabled = true;
+    const wasFollowing = button.dataset.following === "true";
+
+    try {
+      let result;
+
+      if (wasFollowing) {
+        result = await db.from("follows")
+          .delete()
+          .eq("follower_id",currentUser.id)
+          .eq("following_id",userId);
+      } else {
+        result = await db.from("follows")
+          .insert({
+            follower_id:currentUser.id,
+            following_id:userId
+          });
+      }
+
+      if (result.error) throw result.error;
+
+      msg(wasFollowing ? "تم إلغاء المتابعة." : "أصبحت تتابع هذا الحساب 🌱");
+      await openProfile(userId);
+    } catch (e) {
+      msg("تعذر تحديث المتابعة: " + e.message);
+      button.disabled = false;
+    }
+  }
+
+  // عرض لائحة المتابعين أو الحسابات التي يتابعها الشخص
+  async function showFollowList(userId,type) {
+    const panel = $("fc-public-profile");
+    const isFollowers = type === "followers";
+    const title = isFollowers ? "المتابعون" : "يتابع";
+
+    panel.classList.remove("fc-hidden");
+    panel.innerHTML = '<div class="fc-empty">جاري تحميل اللائحة...</div>';
+
+    try {
+      const filterColumn = isFollowers ? "following_id" : "follower_id";
+      const resultColumn = isFollowers ? "follower_id" : "following_id";
+
+      const {data,error} = await db.from("follows")
+        .select("follower_id,following_id")
+        .eq(filterColumn,userId);
+
+      if (error) throw error;
+
+      const ids = [...new Set((data || []).map(row => row[resultColumn]))];
+
+      if (!ids.length) {
+        panel.innerHTML = `
+          <div class="fc-profile-head">
+            <button class="fc-profile-edit" id="fc-follow-list-back">← رجوع للحساب</button>
+            <h3>${title}</h3>
+          </div>
+          <div class="fc-empty">لا توجد حسابات في هذه اللائحة بعد.</div>
+        `;
+        $("fc-follow-list-back").onclick = () => openProfile(userId);
+        return;
+      }
+
+      await getProfiles(ids);
+
+      panel.innerHTML = `
+        <div class="fc-profile-head">
+          <button class="fc-profile-edit" id="fc-follow-list-back">← رجوع للحساب</button>
+          <h3>${title} (${ids.length})</h3>
+        </div>
+        <div>
+          ${ids.map(id => {
+            const profile = profilesCache[id] || {};
+            return `
+              <div class="fc-follow-user" data-follow-user="${esc(id)}">
+                ${avatar(profile.avatar_url,profile.full_name)}
+                <div>
+                  <strong>${esc(profile.full_name || "فلاح")}</strong>
+                  <small>${esc(profile.city || "عضو في المجتمع الفلاحي")}</small>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      $("fc-follow-list-back").onclick = () => openProfile(userId);
+
+      panel.querySelectorAll("[data-follow-user]").forEach(item => {
+        item.onclick = () => openProfile(item.dataset.followUser);
+      });
+
+    } catch (e) {
+      panel.innerHTML = `
+        <div class="fc-empty">
+          تعذر تحميل اللائحة.<br>
+          ${esc(e.message)}
+          <button class="fc-profile-edit" id="fc-follow-list-back">رجوع للحساب</button>
+        </div>
+      `;
+      $("fc-follow-list-back").onclick = () => openProfile(userId);
+    }
+  }
+
+  // فتح الملف الشخصي العام مع المتابعين
   async function openProfile(userId) {
     activeProfileId = userId;
 
@@ -788,90 +944,146 @@
     panel.classList.remove("fc-hidden");
     panel.innerHTML = '<div class="fc-empty">جاري تحميل الحساب...</div>';
 
-    const {data:profile,error} = await db.from("profiles")
-      .select("id,full_name,city,bio,crops,avatar_url")
-      .eq("id",userId).maybeSingle();
+    try {
+      const {data:profile,error} = await db.from("profiles")
+        .select("id,full_name,city,bio,crops,avatar_url")
+        .eq("id",userId)
+        .maybeSingle();
 
-    if (error || !profile) {
-      panel.innerHTML = '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
-      return;
-    }
+      if (error) throw error;
+      if (!profile) {
+        panel.innerHTML = '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
+        return;
+      }
 
-    profilesCache[userId] = profile;
+      profilesCache[userId] = profile;
 
-    const {data:posts} = await db.from("posts")
-      .select("*").eq("user_id",userId)
-      .order("created_at",{ascending:false});
+      const [postsResult,followStats,followingState] = await Promise.all([
+        db.from("posts")
+          .select("*")
+          .eq("user_id",userId)
+          .order("created_at",{ascending:false}),
+        getFollowStats(userId),
+        isFollowing(userId)
+      ]);
 
-    const userPosts = posts || [];
-    const postIds = userPosts.map(p => p.id);
-    let likes = [];
+      if (postsResult.error) throw postsResult.error;
 
-    if (postIds.length) {
-      const result = await db.from("likes")
-        .select("post_id,user_id").in("post_id",postIds);
-      likes = result.data || [];
-    }
+      const userPosts = postsResult.data || [];
+      const postIds = userPosts.map(p => p.id);
+      let likes = [];
 
-    const totalLikes = likes.length;
-    const crops = Array.isArray(profile.crops) ? profile.crops : [];
-    const own = currentUser?.id === userId;
+      if (postIds.length) {
+        const result = await db.from("likes")
+          .select("post_id,user_id")
+          .in("post_id",postIds);
 
-    panel.innerHTML = `
-      <div class="fc-profile-head">
-        <div class="fc-profile-top">
-          ${profile.avatar_url
-            ? `<img class="fc-profile-avatar" src="${esc(profile.avatar_url)}" alt="الصورة الشخصية">`
-            : `<div class="fc-avatar fc-avatar-placeholder" style="width:88px;height:88px;font-size:42px">👨‍🌾</div>`}
-          <div class="fc-profile-stats">
-            <div><strong>${userPosts.length}</strong><span>منشور</span></div>
-            <div><strong>${totalLikes}</strong><span>إعجاب</span></div>
-            <div><strong>${crops.length}</strong><span>اهتمام</span></div>
-          </div>
-        </div>
-        <div class="fc-profile-name">${esc(profile.full_name || "فلاح")}</div>
-        ${profile.city ? `<div class="fc-muted">📍 ${esc(profile.city)}</div>` : ""}
-        ${profile.bio ? `<div class="fc-profile-bio">${esc(profile.bio)}</div>` : ""}
-        ${crops.length ? `<div class="fc-muted" style="margin-top:7px">🌱 يهتم بـ: ${esc(crops.join("، "))}</div>` : ""}
-        ${own ? `<button class="fc-profile-edit" id="fc-edit-own-profile">✏️ تعديل الملف الشخصي</button>` : ""}
-        <button class="fc-profile-edit" id="fc-profile-back">← العودة للمنشورات</button>
-      </div>
-      <div class="fc-profile-tabs">▦ المنشورات</div>
-      ${userPosts.length ? `
-        <div class="fc-profile-grid">
-          ${userPosts.map(post => `
-            <div class="fc-grid-item" data-open-profile-post="${esc(post.id)}">
-              ${post.image_url
-                ? `<img src="${esc(post.image_url)}" loading="lazy" alt="منشور">`
-                : `<div class="fc-grid-text">${esc(post.content)}</div>`}
-              <span class="fc-grid-count">❤️ ${likes.filter(l => l.post_id === post.id).length}</span>
+        if (result.error) throw result.error;
+        likes = result.data || [];
+      }
+
+      const totalLikes = likes.length;
+      const crops = Array.isArray(profile.crops) ? profile.crops : [];
+      const own = currentUser?.id === userId;
+
+      panel.innerHTML = `
+        <div class="fc-profile-head">
+          <div class="fc-profile-top">
+            ${profile.avatar_url
+              ? `<img class="fc-profile-avatar" src="${esc(profile.avatar_url)}" alt="الصورة الشخصية">`
+              : `<div class="fc-avatar fc-avatar-placeholder" style="width:88px;height:88px;font-size:42px">👨‍🌾</div>`}
+            <div class="fc-profile-stats">
+              <div>
+                <strong>${userPosts.length}</strong>
+                <span>منشور</span>
+              </div>
+              <button type="button" id="fc-show-followers">
+                <strong>${followStats.followers}</strong>
+                <span>متابع</span>
+              </button>
+              <button type="button" id="fc-show-following">
+                <strong>${followStats.following}</strong>
+                <span>يتابع</span>
+              </button>
             </div>
-          `).join("")}
+          </div>
+
+          <div class="fc-profile-name">${esc(profile.full_name || "فلاح")}</div>
+          ${profile.city ? `<div class="fc-muted">📍 ${esc(profile.city)}</div>` : ""}
+          ${profile.bio ? `<div class="fc-profile-bio">${esc(profile.bio)}</div>` : ""}
+          ${crops.length ? `<div class="fc-muted" style="margin-top:7px">🌱 يهتم بـ: ${esc(crops.join("، "))}</div>` : ""}
+
+          ${own
+            ? `<button class="fc-profile-edit" id="fc-edit-own-profile">✏️ تعديل الملف الشخصي</button>`
+            : currentUser
+              ? `<button class="fc-follow-btn ${followingState ? "following" : ""}"
+                   id="fc-follow-button"
+                   data-following="${followingState}">
+                   ${followingState ? "✓ تتابعه — إلغاء المتابعة" : "＋ متابعة"}
+                 </button>`
+              : `<p class="fc-muted" style="margin-top:10px">سجل الدخول لمتابعة هذا الحساب.</p>`
+          }
+
+          <button class="fc-profile-edit" id="fc-profile-back">← العودة للمنشورات</button>
         </div>
-      ` : '<div class="fc-empty">📷<br>لا توجد منشورات بعد.</div>'}
-    `;
 
-    $("fc-profile-back").onclick = () => {
-      panel.classList.add("fc-hidden");
-      $("fc-user").classList.remove("fc-hidden");
-      $("fc-feed").classList.remove("fc-hidden");
-    };
+        <div class="fc-profile-tabs">▦ المنشورات</div>
 
-    if ($("fc-edit-own-profile")) {
-      $("fc-edit-own-profile").onclick = editOwnProfile;
-    }
+        ${userPosts.length ? `
+          <div class="fc-profile-grid">
+            ${userPosts.map(post => `
+              <div class="fc-grid-item" data-open-profile-post="${esc(post.id)}">
+                ${post.image_url
+                  ? `<img src="${esc(post.image_url)}" loading="lazy" alt="منشور">`
+                  : `<div class="fc-grid-text">${esc(post.content)}</div>`}
+                <span class="fc-grid-count">❤️ ${likes.filter(l => l.post_id === post.id).length}</span>
+              </div>
+            `).join("")}
+          </div>
+        ` : '<div class="fc-empty">📷<br>لا توجد منشورات بعد.</div>'}
+      `;
 
-    panel.querySelectorAll("[data-open-profile-post]").forEach(item => {
-      item.onclick = () => {
-        const post = userPosts.find(
-          p => String(p.id) === item.dataset.openProfilePost
-        );
-        if (post) openPostDetail(post,profile);
+      $("fc-profile-back").onclick = () => {
+        panel.classList.add("fc-hidden");
+        $("fc-user").classList.remove("fc-hidden");
+        $("fc-feed").classList.remove("fc-hidden");
       };
-    });
 
-    $("fc-user").classList.add("fc-hidden");
-    window.scrollTo({top:root.offsetTop,behavior:"smooth"});
+      $("fc-show-followers").onclick = () => showFollowList(userId,"followers");
+      $("fc-show-following").onclick = () => showFollowList(userId,"following");
+
+      const followButton = $("fc-follow-button");
+      if (followButton) {
+        followButton.onclick = () => toggleFollow(userId,followButton);
+      }
+
+      if ($("fc-edit-own-profile")) {
+        $("fc-edit-own-profile").onclick = editOwnProfile;
+      }
+
+      panel.querySelectorAll("[data-open-profile-post]").forEach(item => {
+        item.onclick = () => {
+          const post = userPosts.find(
+            p => String(p.id) === item.dataset.openProfilePost
+          );
+          if (post) openPostDetail(post,profile);
+        };
+      });
+
+      $("fc-user").classList.add("fc-hidden");
+      window.scrollTo({top:root.offsetTop,behavior:"smooth"});
+
+    } catch (e) {
+      console.error("Profile error:",e);
+      panel.innerHTML = `
+        <div class="fc-empty">
+          تعذر تحميل هذا الحساب.<br>
+          ${esc(e.message)}
+          <button class="fc-profile-edit" id="fc-profile-error-back">رجوع</button>
+        </div>
+      `;
+      $("fc-profile-error-back").onclick = () => setTab("feed");
+    }
   }
 
   // تفاصيل المنشور
