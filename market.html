@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>السوق الفلاحي | فلاحي 2.0</title>
+
+<!-- نظام الدخول الموحد -->
+<script src="./auth-gate.js"></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f0f2f5;color:#183329;font-family:Arial,Tahoma}
@@ -348,7 +351,7 @@ function renderAds() {
 
 $("publish").onclick = async function() {
   if (!user) {
-    message("سجل الدخول أولاً من المجتمع الفلاحي.");
+    message("سجل الدخول أولاً.");
     return;
   }
 
@@ -491,7 +494,7 @@ $("ads").onclick = async function(e) {
 
   if (likeButton) {
     if (!user) {
-      message("سجل الدخول من المجتمع الفلاحي باش تدير إعجاب.");
+      message("سجل الدخول أولاً باش تدير إعجاب.");
       return;
     }
 
