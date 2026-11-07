@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.alarsadi12.twa",
+      "sha256_cert_fingerprints": [
+        "1F:29:94:9C:0B:13:F0:C9:F8:54:CD:2B:DB:6F:F7:64:EB:95:5C:97:BD:8E:B6:28:1B:0E:7F:84:AC:4B:8D:EB"
+      ]
+    }
+  }
+]
