@@ -263,14 +263,17 @@ $("image").value = "";
 await loadAds();
 };
 $("ads").onclick = async function(e) {
-  const editId = e.target.getAttribute("data-edit");
-  const deleteId = e.target.getAttribute("data-delete");
+  const editButton = e.target.closest("[data-edit]");
+  const deleteButton = e.target.closest("[data-delete]");
 
-  if (editId) {
+  if (editButton) {
+    const editId = editButton.getAttribute("data-edit");
     const ad = allAds.find(a => String(a.id) === editId);
-    if (!ad) return;
-  editingAdId = ad.id;
-$("publish").textContent = "حفظ التعديل";
+
+    if (!ad || !user || ad.user_id !== user.id) return;
+
+    editingAdId = ad.id;
+
     $("title").value = ad.title || "";
     $("category").value = ad.category || "";
     $("description").value = ad.description || "";
@@ -278,11 +281,15 @@ $("publish").textContent = "حفظ التعديل";
     $("city").value = ad.city || "";
     $("phone").value = ad.phone || "";
 
-    message("عدّل معلومات الإعلان ثم اضغط نشر الإعلان لإنشاء نسخة معدلة.");
+    $("publish").textContent = "حفظ التعديل";
+    message("بدّل المعلومات ثم اضغط حفظ التعديل.");
+    window.scrollTo(0, 0);
     return;
   }
 
-  if (deleteId) {
+  if (deleteButton) {
+    const deleteId = deleteButton.getAttribute("data-delete");
+
     if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) return;
 
     const { error } = await db
@@ -300,27 +307,6 @@ $("publish").textContent = "حفظ التعديل";
     await loadAds();
   }
 };
-$("search").oninput = renderAds;
-$("filter").onchange = renderAds;
-
-async function startMarket() {
-  $("hint").textContent = "جاري الاتصال...";
-
-  const { data, error } = await db.auth.getSession();
-
-  if (error) {
-    $("hint").textContent = "خطأ في الحساب: " + error.message;
-    return;
-  }
-
-  user = data.session ? data.session.user : null;
-
-  $("hint").textContent = user
-    ? "أنت مسجل الدخول، يمكنك نشر إعلانك."
-    : "ارجع للمجتمع الفلاحي وسجل الدخول أولاً.";
-
-  await loadAds();
-}
 
 startMarket();
 </script>
