@@ -7,82 +7,109 @@
 <title>السوق الفلاحي | فلاحي 2.0</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f4f8f5;color:#183329;font-family:Arial,Tahoma}
-header{background:#176b45;color:white;padding:25px 18px;border-radius:0 0 22px 22px}
-main{max-width:700px;margin:auto;padding:15px}
-.card{background:white;padding:16px;border-radius:15px;margin:14px 0}
+body{margin:0;background:#f0f2f5;color:#183329;font-family:Arial,Tahoma}
+header{background:#176b45;color:white;padding:20px 16px;border-radius:0 0 20px 20px}
+header a{color:white}
+main{max-width:700px;margin:auto;padding:12px}
+.card,.post{background:white;padding:16px;border-radius:14px;margin:13px 0;box-shadow:0 1px 4px #0000000c}
 input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:9px;font:inherit}
-textarea{min-height:80px}
-button{background:#176b45;color:white;border:0;border-radius:9px;padding:12px;width:100%;font-weight:bold;cursor:pointer}
-.ad{border-bottom:1px solid #ddd;padding:13px 0}
-.price{color:#176b45;font-weight:bold}
+textarea{min-height:75px;resize:vertical}
+button{background:#176b45;color:white;border:0;border-radius:9px;padding:11px;font:inherit;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6}
 small{color:#718078}
 a{color:inherit}
-.interaction{margin-top:15px;padding:12px;background:#f4f8f5;border-radius:12px}
-.like-btn{background:#fff0f0;color:#b42318;border:1px solid #f0cccc;margin-bottom:12px}
-.like-btn.liked{background:#b42318;color:white}
-.comment{background:white;border:1px solid #e5e9e6;border-radius:9px;padding:10px;margin:8px 0}
-.comment p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.comment small{font-size:11px}
-.comment-delete{width:auto;padding:5px 10px;background:#b42318;font-size:12px;margin-top:5px}
-.comment-box{margin-top:12px}
-.comment-box textarea{min-height:65px}
-.comment-box button{margin-top:4px}
+.post-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avatar{width:40px;height:40px;border-radius:50%;background:#e2f2e8;display:flex;align-items:center;justify-content:center;font-size:21px}
+.post-image{width:100%;max-height:330px;object-fit:cover;border-radius:10px;margin:10px 0}
+.post-title{margin:4px 0}
+.post-description{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.price{color:#176b45;font-weight:bold;font-size:18px;margin:10px 0}
+.post-stats{display:flex;justify-content:space-between;color:#718078;font-size:13px;padding:9px 2px;border-bottom:1px solid #eee}
+.post-actions{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #eee}
+.post-actions button{flex:1;background:#f2f4f5;color:#46534b}
+.post-actions button.liked{background:#fff0f0;color:#d12c45}
+.post-actions button:active{transform:scale(.98)}
+.comments-area{padding-top:12px}
+.comments-title{font-weight:bold;margin-bottom:10px}
+.comment{display:flex;gap:8px;margin:12px 0;align-items:flex-start}
+.comment-avatar{width:32px;height:32px;flex-shrink:0;border-radius:50%;background:#e8f1eb;display:flex;align-items:center;justify-content:center}
+.comment-content{background:#f0f2f5;border-radius:14px;padding:9px 12px;flex:1;min-width:0}
+.comment-content p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.comment-meta{font-size:11px;color:#718078}
+.comment-delete{background:none;color:#b42318;padding:3px 6px;font-size:12px;width:auto}
+.comment-form{display:flex;gap:7px;align-items:center;margin-top:12px}
+.comment-form textarea{min-height:43px;height:43px;margin:0;flex:1;border-radius:20px}
+.comment-form button{border-radius:20px;white-space:nowrap;padding:11px 14px}
+.owner-actions{display:flex;gap:8px;margin-top:12px}
+.owner-actions button{flex:1}
+#notificationPanel{display:none;background:white;color:#183329;border-radius:12px;padding:12px;margin-top:12px}
+.notification{padding:11px;border-bottom:1px solid #eee;cursor:pointer}
+.notification.unread{background:#eff8f1}
+.notification p{margin:4px 0}
+#bell{width:auto;background:#fff;color:#176b45;padding:9px 13px}
+#bell-count{background:#d12c45;color:white;border-radius:20px;padding:2px 7px;font-size:12px}
+.empty{color:#718078;text-align:center;padding:20px}
 </style>
 </head>
 <body>
 
 <header>
-<h2>🧺 السوق الفلاحي</h2>
-<p>بيع وشراء المنتجات والمعدات الفلاحية</p>
-<a href="index.html">← الرجوع إلى فلاحي 2.0</a>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <div>
+      <h2 style="margin:0">🧺 السوق الفلاحي</h2>
+      <p style="margin:7px 0">بيع وشراء المنتجات والمعدات الفلاحية</p>
+    </div>
+    <button id="bell">🔔 <span id="bell-count">0</span></button>
+  </div>
+  <a href="index.html">← الرجوع إلى فلاحي 2.0</a>
+  <div id="notificationPanel">
+    <h3 style="margin-top:4px">🔔 إشعاراتك</h3>
+    <div id="notificationsList">جاري التحميل...</div>
+  </div>
 </header>
 
 <main>
-<div class="card">
-<h3>➕ نشر إعلان جديد</h3>
-<p id="hint">السوق الفلاحي</p>
-<input id="title" placeholder="اسم المنتج">
+  <div class="card">
+    <h3>➕ نشر إعلان جديد</h3>
+    <p id="hint">السوق الفلاحي</p>
+    <input id="title" placeholder="اسم المنتج">
 
-<select id="category">
-<option>شتلات وبذور</option>
-<option>خضر وفواكه</option>
-<option>معدات فلاحية</option>
-<option>أسمدة وأدوية</option>
-<option>سقي وري</option>
-<option>أخرى</option>
-</select>
+    <select id="category">
+      <option>شتلات وبذور</option>
+      <option>خضر وفواكه</option>
+      <option>معدات فلاحية</option>
+      <option>أسمدة وأدوية</option>
+      <option>سقي وري</option>
+      <option>أخرى</option>
+    </select>
 
-<textarea id="description" placeholder="تفاصيل المنتج"></textarea>
-<input id="price" type="number" min="0" placeholder="الثمن بالدرهم">
-<input id="city" placeholder="المدينة أو المنطقة">
-<input id="phone" placeholder="رقم الهاتف">
-<input id="image" type="file" accept="image/*">
+    <textarea id="description" placeholder="تفاصيل المنتج"></textarea>
+    <input id="price" type="number" min="0" placeholder="الثمن بالدرهم">
+    <input id="city" placeholder="المدينة أو المنطقة">
+    <input id="phone" placeholder="رقم الهاتف">
+    <input id="image" type="file" accept="image/*">
 
-<button id="publish">نشر الإعلان</button>
-<p id="message"></p>
-</div>
+    <button id="publish" style="width:100%">نشر الإعلان</button>
+    <p id="message"></p>
+  </div>
 
-<div class="card">
-<h3>🔎 إعلانات السوق</h3>
-<input id="search" placeholder="ابحث عن منتج أو مدينة">
-
-<select id="filter">
-<option value="">جميع الأصناف</option>
-<option>شتلات وبذور</option>
-<option>خضر وفواكه</option>
-<option>معدات فلاحية</option>
-<option>أسمدة وأدوية</option>
-<option>سقي وري</option>
-<option>أخرى</option>
-</select>
-
-<div id="ads">جاري تحميل الإعلانات...</div>
-</div>
+  <div class="card">
+    <h3>🔎 إعلانات السوق</h3>
+    <input id="search" placeholder="ابحث عن منتج أو مدينة">
+    <select id="filter">
+      <option value="">جميع الأصناف</option>
+      <option>شتلات وبذور</option>
+      <option>خضر وفواكه</option>
+      <option>معدات فلاحية</option>
+      <option>أسمدة وأدوية</option>
+      <option>سقي وري</option>
+      <option>أخرى</option>
+    </select>
+    <div id="ads">جاري تحميل الإعلانات...</div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 const db = window.supabase.createClient(
   "https://kldxlodykkomkresegyt.supabase.co",
@@ -95,6 +122,7 @@ let user = null;
 let allAds = [];
 let allComments = [];
 let allLikes = [];
+let allNotifications = [];
 let editingAdId = null;
 
 function message(t) {
@@ -103,20 +131,74 @@ function message(t) {
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   })[c]);
 }
 
+function dateText(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("ar-MA");
+}
+
+async function loadNotifications() {
+  if (!user) {
+    allNotifications = [];
+    renderNotifications();
+    return;
+  }
+
+  const {data,error} = await db
+    .from("market_notifications")
+    .select("*")
+    .eq("recipient_id",user.id)
+    .order("created_at",{ascending:false})
+    .limit(30);
+
+  if (error) {
+    $("notificationsList").textContent = "تعذر تحميل الإشعارات: " + error.message;
+    return;
+  }
+
+  allNotifications = data || [];
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const unread = allNotifications.filter(n => !n.read_at).length;
+  $("bell-count").textContent = unread;
+
+  if (!user) {
+    $("notificationsList").innerHTML =
+      '<div class="empty">سجل الدخول باش تشوف إشعاراتك.</div>';
+    return;
+  }
+
+  if (!allNotifications.length) {
+    $("notificationsList").innerHTML =
+      '<div class="empty">ما عندك حتى إشعار دابا.</div>';
+    return;
+  }
+
+  $("notificationsList").innerHTML = allNotifications.map(n => {
+    const label = n.notification_type === "like"
+      ? "❤️ أعجب أحد المستخدمين بإعلانك"
+      : "💬 كتب أحد المستخدمين تعليقاً على إعلانك";
+
+    return '<div class="notification ' + (!n.read_at ? "unread" : "") +
+      '" data-notification="' + esc(n.id) +
+      '" data-ad="' + esc(n.ad_id) + '">' +
+      '<p>' + label + '</p>' +
+      '<small>' + esc(dateText(n.created_at)) + '</small>' +
+      '</div>';
+  }).join("");
+}
+
 async function loadAds() {
-  const { data, error } = await db
+  const {data,error} = await db
     .from("market_ads")
     .select("*")
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+    .eq("status","active")
+    .order("created_at",{ascending:false});
 
   if (error) {
     $("ads").textContent = "تعذر تحميل الإعلانات: " + error.message;
@@ -126,24 +208,30 @@ async function loadAds() {
   allAds = data || [];
 
   if (allAds.length) {
-    const [commentsResult, likesResult] = await Promise.all([
-      db.from("market_comments")
-        .select("id,ad_id,user_id,content,created_at")
-        .in("ad_id", allAds.map(a => a.id))
-        .order("created_at", { ascending: true }),
+    const ids = allAds.map(a => a.id);
 
+    const [cr,lr] = await Promise.all([
+      db.from("market_comments")
+        .select("*")
+        .in("ad_id",ids)
+        .order("created_at",{ascending:true}),
       db.from("market_likes")
-        .select("id,ad_id,user_id")
-        .in("ad_id", allAds.map(a => a.id))
+        .select("*")
+        .in("ad_id",ids)
     ]);
 
-    allComments = commentsResult.data || [];
-    allLikes = likesResult.data || [];
+    if (cr.error) {
+      message("تعذر تحميل التعليقات: " + cr.error.message);
+      allComments = [];
+    } else {
+      allComments = cr.data || [];
+    }
 
-    if (commentsResult.error) {
-      message("تعذر تحميل التعليقات: " + commentsResult.error.message);
-    } else if (likesResult.error) {
-      message("تعذر تحميل الإعجابات: " + likesResult.error.message);
+    if (lr.error) {
+      message("تعذر تحميل الإعجابات: " + lr.error.message);
+      allLikes = [];
+    } else {
+      allLikes = lr.data || [];
     }
   } else {
     allComments = [];
@@ -159,77 +247,90 @@ function renderAds() {
 
   const rows = allAds.filter(a =>
     (!cat || a.category === cat) &&
-    (!q || [a.title, a.city, a.description, a.category]
+    (!q || [a.title,a.city,a.description,a.category]
       .join(" ").toLowerCase().includes(q))
   );
 
   if (!rows.length) {
-    $("ads").textContent = "لا توجد إعلانات حالياً.";
+    $("ads").innerHTML = '<div class="empty">لا توجد إعلانات حالياً.</div>';
     return;
   }
 
   $("ads").innerHTML = rows.map(a => {
+    const comments = allComments.filter(c => c.ad_id === a.id);
+    const likes = allLikes.filter(l => l.ad_id === a.id);
+    const liked = user && likes.some(l => l.user_id === user.id);
+
     const phone = a.phone
       ? '<p>📞 <a href="tel:' + esc(a.phone) + '">' + esc(a.phone) + '</a></p>'
       : "";
 
     const ownerButtons = user && a.user_id === user.id
-      ? '<button data-edit="' + esc(a.id) + '" style="margin-top:8px">✏️ تعديل الإعلان</button>' +
-        '<button data-delete="' + esc(a.id) + '" style="margin-top:8px;background:#b42318">🗑️ حذف الإعلان</button>'
+      ? '<div class="owner-actions">' +
+        '<button data-edit="' + esc(a.id) + '">✏️ تعديل</button>' +
+        '<button data-delete="' + esc(a.id) + '" style="background:#b42318">🗑️ حذف</button>' +
+        '</div>'
       : "";
 
-    const adComments = allComments.filter(c => c.ad_id === a.id);
-    const adLikes = allLikes.filter(l => l.ad_id === a.id);
-    const liked = user && adLikes.some(l => l.user_id === user.id);
-
-    const likeButton = user
-      ? '<button class="like-btn ' + (liked ? 'liked' : '') +
-        '" data-like="' + esc(a.id) + '">' +
-        (liked ? '❤️ أعجبني' : '🤍 إعجاب') +
-        ' · ' + adLikes.length + '</button>'
-      : '<button class="like-btn" data-like="' + esc(a.id) + '">' +
-        '❤️ إعجاب · ' + adLikes.length + '</button>';
-
-    const commentsHtml = adComments.length
-      ? adComments.map(c =>
+    const commentHtml = comments.length
+      ? comments.map(c =>
           '<div class="comment">' +
-          '<small>👤 مستخدم · ' +
-          esc(c.created_at ? new Date(c.created_at).toLocaleString("ar-MA") : "") +
-          '</small>' +
+          '<div class="comment-avatar">👤</div>' +
+          '<div class="comment-content">' +
+          '<div class="comment-meta">مستخدم · ' + esc(dateText(c.created_at)) + '</div>' +
           '<p>' + esc(c.content) + '</p>' +
           (user && c.user_id === user.id
-            ? '<button class="comment-delete" data-comment-delete="' + esc(c.id) + '">حذف تعليقي</button>'
+            ? '<button class="comment-delete" data-comment-delete="' + esc(c.id) + '">حذف التعليق</button>'
             : '') +
-          '</div>'
+          '</div></div>'
         ).join("")
-      : '<p><small>لا توجد تعليقات بعد. كن أول من يعلق!</small></p>';
+      : '<div class="empty">باقي ما كاين حتى تعليق. بدا النقاش!</div>';
 
     const commentForm = user
-      ? '<div class="comment-box">' +
-        '<textarea data-comment-input="' + esc(a.id) + '" placeholder="اكتب تعليقك هنا..."></textarea>' +
-        '<button data-comment-submit="' + esc(a.id) + '">💬 إرسال التعليق</button>' +
+      ? '<div class="comment-form">' +
+        '<textarea data-comment-input="' + esc(a.id) + '" placeholder="اكتب تعليقاً..."></textarea>' +
+        '<button data-comment-submit="' + esc(a.id) + '">إرسال</button>' +
         '</div>'
-      : '<p><small>سجل الدخول من المجتمع الفلاحي باش تقدر تعلق وتعجب بالإعلان.</small></p>';
+      : '<p><small>سجل الدخول باش تقدر تعلق.</small></p>';
 
-    return '<div class="ad">' +
+    return '<article class="post" id="ad-' + esc(a.id) + '">' +
+      '<div class="post-head">' +
+      '<div class="avatar">🌱</div>' +
+      '<div><strong>إعلان فلاحي</strong><br><small>' +
+      esc(a.city || "") + ' · ' + esc(dateText(a.created_at)) +
+      '</small></div></div>' +
+
+      '<h3 class="post-title">' + esc(a.title) + '</h3>' +
+      '<small>' + esc(a.category) + '</small>' +
+      '<p class="post-description">' + esc(a.description || "") + '</p>' +
+
       (a.image_url
-        ? '<img src="' + esc(a.image_url) + '" alt="' + esc(a.title) + '" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px">'
+        ? '<img class="post-image" src="' + esc(a.image_url) + '" alt="' + esc(a.title) + '">'
         : '') +
-      '<h3>' + esc(a.title) + '</h3>' +
-      '<small>' + esc(a.category) + ' · ' + esc(a.city || "") + '</small>' +
-      '<p>' + esc(a.description || "") + '</p>' +
+
       '<div class="price">' +
       (a.price !== null ? esc(a.price) + " درهم" : "الثمن عند التواصل") +
-      '</div>' + phone + ownerButtons +
+      '</div>' + phone +
 
-      '<div class="interaction">' +
-      likeButton +
-      '<h4>💬 التعليقات (' + adComments.length + ')</h4>' +
-      commentsHtml +
-      commentForm +
+      '<div class="post-stats">' +
+      '<span>❤️ ' + likes.length + ' إعجاب</span>' +
+      '<span>💬 ' + comments.length + ' تعليق</span>' +
       '</div>' +
 
-      '</div>';
+      '<div class="post-actions">' +
+      '<button class="' + (liked ? "liked" : "") +
+      '" data-like="' + esc(a.id) + '">' +
+      (liked ? "❤️ أعجبني" : "🤍 إعجاب") + '</button>' +
+      '<button data-focus-comment="' + esc(a.id) + '">💬 تعليق</button>' +
+      '</div>' +
+
+      '<section class="comments-area">' +
+      '<div class="comments-title">💬 التعليقات</div>' +
+      commentHtml + commentForm +
+      '</section>' +
+
+      ownerButtons +
+      '</article>';
   }).join("");
 }
 
@@ -270,9 +371,7 @@ $("publish").onclick = async function() {
   let imageUrl = null;
 
   if (editingAdId) {
-    const oldAd = allAds.find(
-      a => String(a.id) === String(editingAdId)
-    );
+    const oldAd = allAds.find(a => String(a.id) === String(editingAdId));
 
     if (!oldAd || oldAd.user_id !== user.id) {
       message("تعذر العثور على إعلانك.");
@@ -286,20 +385,20 @@ $("publish").onclick = async function() {
     message("جاري رفع الصورة...");
 
     const ext = file.name.split(".").pop().toLowerCase()
-      .replace(/[^a-z0-9]/g, "") || "jpg";
+      .replace(/[^a-z0-9]/g,"") || "jpg";
 
     const path = user.id + "/" + Date.now() + "." + ext;
 
-    const { error: uploadError } = await db.storage
+    const {error:uploadError} = await db.storage
       .from("fellahi-images")
-      .upload(path, file, { cacheControl: "3600" });
+      .upload(path,file,{cacheControl:"3600"});
 
     if (uploadError) {
       message("تعذر رفع الصورة: " + uploadError.message);
       return;
     }
 
-    const { data: publicData } = db.storage
+    const {data:publicData} = db.storage
       .from("fellahi-images")
       .getPublicUrl(path);
 
@@ -309,39 +408,29 @@ $("publish").onclick = async function() {
   message("جاري حفظ الإعلان...");
 
   const adData = {
-    title,
-    category,
-    description,
-    price: priceValue === "" ? null : Number(priceValue),
-    city,
-    phone,
-    image_url: imageUrl,
-    status: "active"
+    title,category,description,
+    price:priceValue === "" ? null : Number(priceValue),
+    city,phone,image_url:imageUrl,status:"active"
   };
 
   let error = null;
 
   if (editingAdId) {
-    const result = await db
-      .from("market_ads")
+    const result = await db.from("market_ads")
       .update(adData)
-      .eq("id", editingAdId)
-      .eq("user_id", user.id)
+      .eq("id",editingAdId)
+      .eq("user_id",user.id)
       .select("id");
 
     error = result.error;
 
-    if (!error && (!result.data || result.data.length === 0)) {
+    if (!error && (!result.data || !result.data.length)) {
       message("لم يتم تعديل الإعلان. تحقق من الصلاحيات.");
       return;
     }
   } else {
-    const result = await db
-      .from("market_ads")
-      .insert({
-        ...adData,
-        user_id: user.id
-      });
+    const result = await db.from("market_ads")
+      .insert({...adData,user_id:user.id});
 
     error = result.error;
   }
@@ -351,16 +440,10 @@ $("publish").onclick = async function() {
     return;
   }
 
-  const wasEditing = !!editingAdId;
-
-  message(wasEditing
-    ? "تم تعديل الإعلان بنجاح!"
-    : "تم نشر الإعلان بنجاح!"
-  );
+  message(editingAdId ? "تم تعديل الإعلان بنجاح!" : "تم نشر الإعلان بنجاح!");
 
   editingAdId = null;
   $("publish").textContent = "نشر الإعلان";
-
   $("title").value = "";
   $("category").selectedIndex = 0;
   $("description").value = "";
@@ -375,66 +458,59 @@ $("publish").onclick = async function() {
 $("ads").onclick = async function(e) {
   const likeButton = e.target.closest("[data-like]");
   const commentButton = e.target.closest("[data-comment-submit]");
-  const commentDeleteButton = e.target.closest("[data-comment-delete]");
+  const commentDelete = e.target.closest("[data-comment-delete]");
+  const focusComment = e.target.closest("[data-focus-comment]");
   const editButton = e.target.closest("[data-edit]");
   const deleteButton = e.target.closest("[data-delete]");
 
-  // الإعجاب
   if (likeButton) {
     if (!user) {
       message("سجل الدخول من المجتمع الفلاحي باش تدير إعجاب.");
       return;
     }
 
-    const adId = likeButton.getAttribute("data-like");
-
-    const existingLike = allLikes.find(
-      l => l.ad_id === adId && l.user_id === user.id
-    );
+    const adId = likeButton.dataset.like;
+    const existing = allLikes.find(l => l.ad_id === adId && l.user_id === user.id);
 
     likeButton.disabled = true;
 
-    if (existingLike) {
-      const { error } = await db
-        .from("market_likes")
-        .delete()
-        .eq("ad_id", adId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        message("تعذر إزالة الإعجاب: " + error.message);
-        likeButton.disabled = false;
-        return;
-      }
-    } else {
-      const { error } = await db
-        .from("market_likes")
-        .insert({
-          ad_id: adId,
-          user_id: user.id
+    const result = existing
+      ? await db.from("market_likes").delete()
+          .eq("ad_id",adId).eq("user_id",user.id)
+      : await db.from("market_likes").insert({
+          ad_id:adId,user_id:user.id
         });
 
-      if (error) {
-        message("تعذر إضافة الإعجاب: " + error.message);
-        likeButton.disabled = false;
-        return;
-      }
+    if (result.error) {
+      message("تعذر تغيير الإعجاب: " + result.error.message);
+      likeButton.disabled = false;
+      return;
     }
 
     await loadAds();
+    await loadNotifications();
     return;
   }
 
-  // إضافة تعليق
+  if (focusComment) {
+    const id = focusComment.dataset.focusComment;
+    const box = document.querySelector('[data-comment-input="' + id + '"]');
+    if (box) {
+      box.focus();
+      box.scrollIntoView({behavior:"smooth",block:"center"});
+    }
+    return;
+  }
+
   if (commentButton) {
     if (!user) {
       message("سجل الدخول أولاً باش تقدر تعلق.");
       return;
     }
 
-    const adId = commentButton.getAttribute("data-comment-submit");
-    const commentBox = commentButton.closest(".comment-box");
-    const textarea = commentBox.querySelector("textarea");
+    const adId = commentButton.dataset.commentSubmit;
+    const area = commentButton.closest(".comment-form");
+    const textarea = area.querySelector("textarea");
     const content = textarea.value.trim();
 
     if (!content) {
@@ -448,41 +524,33 @@ $("ads").onclick = async function(e) {
     }
 
     commentButton.disabled = true;
-    commentButton.textContent = "جاري إرسال التعليق...";
+    commentButton.textContent = "جاري الإرسال...";
 
-    const { error } = await db
-      .from("market_comments")
-      .insert({
-        ad_id: adId,
-        user_id: user.id,
-        content: content
-      });
+    const {error} = await db.from("market_comments").insert({
+      ad_id:adId,user_id:user.id,content
+    });
 
     if (error) {
       message("تعذر إرسال التعليق: " + error.message);
       commentButton.disabled = false;
-      commentButton.textContent = "💬 إرسال التعليق";
+      commentButton.textContent = "إرسال";
       return;
     }
 
     message("تم إرسال تعليقك بنجاح.");
     await loadAds();
+    await loadNotifications();
     return;
   }
 
-  // حذف تعليق
-  if (commentDeleteButton) {
+  if (commentDelete) {
     if (!user) return;
 
-    const commentId = commentDeleteButton.getAttribute("data-comment-delete");
-
+    const id = commentDelete.dataset.commentDelete;
     if (!confirm("واش متأكد أنك باغي تحذف تعليقك؟")) return;
 
-    const { error } = await db
-      .from("market_comments")
-      .delete()
-      .eq("id", commentId)
-      .eq("user_id", user.id);
+    const {error} = await db.from("market_comments")
+      .delete().eq("id",id).eq("user_id",user.id);
 
     if (error) {
       message("تعذر حذف التعليق: " + error.message);
@@ -494,13 +562,8 @@ $("ads").onclick = async function(e) {
     return;
   }
 
-  // تعديل الإعلان
   if (editButton) {
-    const editId = editButton.getAttribute("data-edit");
-
-    const ad = allAds.find(
-      a => String(a.id) === editId
-    );
+    const ad = allAds.find(a => String(a.id) === editButton.dataset.edit);
 
     if (!ad || !user || ad.user_id !== user.id) {
       message("لا يمكنك تعديل هذا الإعلان.");
@@ -508,7 +571,6 @@ $("ads").onclick = async function(e) {
     }
 
     editingAdId = ad.id;
-
     $("title").value = ad.title || "";
     $("category").value = ad.category || "";
     $("description").value = ad.description || "";
@@ -516,29 +578,23 @@ $("ads").onclick = async function(e) {
     $("city").value = ad.city || "";
     $("phone").value = ad.phone || "";
     $("image").value = "";
-
     $("publish").textContent = "حفظ التعديل";
     message("بدّل المعلومات ثم اضغط حفظ التعديل.");
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
     return;
   }
 
-  // حذف الإعلان
   if (deleteButton) {
     if (!user) {
       message("سجل الدخول أولاً.");
       return;
     }
 
-    const deleteId = deleteButton.getAttribute("data-delete");
-
+    const id = deleteButton.dataset.delete;
     if (!confirm("واش متأكد أنك باغي تحذف هاد الإعلان؟")) return;
 
-    const { error } = await db
-      .from("market_ads")
-      .delete()
-      .eq("id", deleteId)
-      .eq("user_id", user.id);
+    const {error} = await db.from("market_ads")
+      .delete().eq("id",id).eq("user_id",user.id);
 
     if (error) {
       message("تعذر حذف الإعلان: " + error.message);
@@ -547,6 +603,42 @@ $("ads").onclick = async function(e) {
 
     message("تم حذف الإعلان بنجاح.");
     await loadAds();
+    await loadNotifications();
+  }
+};
+
+$("bell").onclick = () => {
+  const panel = $("notificationPanel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+  if (panel.style.display === "block") loadNotifications();
+};
+
+$("notificationsList").onclick = async function(e) {
+  const item = e.target.closest("[data-notification]");
+  if (!item) return;
+
+  const notification = allNotifications.find(n => n.id === item.dataset.notification);
+  if (!notification) return;
+
+  if (!notification.read_at) {
+    const {error} = await db.from("market_notifications")
+      .update({read_at:new Date().toISOString()})
+      .eq("id",notification.id)
+      .eq("recipient_id",user.id);
+
+    if (error) {
+      message("تعذر تحديث الإشعار: " + error.message);
+    }
+  }
+
+  $("notificationPanel").style.display = "none";
+  await loadNotifications();
+
+  const post = document.getElementById("ad-" + notification.ad_id);
+  if (post) {
+    post.scrollIntoView({behavior:"smooth",block:"center"});
+    post.style.outline = "2px solid #176b45";
+    setTimeout(() => post.style.outline = "",1800);
   }
 };
 
@@ -554,19 +646,19 @@ $("search").oninput = renderAds;
 $("filter").onchange = renderAds;
 
 async function startMarket() {
-  const { data, error } = await db.auth.getSession();
+  const {data,error} = await db.auth.getSession();
 
-  if (error) {
-    message("تعذر التحقق من تسجيل الدخول: " + error.message);
-  }
+  if (error) message("تعذر التحقق من تسجيل الدخول: " + error.message);
 
   user = data?.session?.user || null;
 
   await loadAds();
+  await loadNotifications();
 
-  db.auth.onAuthStateChange((_event, session) => {
+  db.auth.onAuthStateChange((_event,session) => {
     user = session?.user || null;
     renderAds();
+    loadNotifications();
   });
 }
 
