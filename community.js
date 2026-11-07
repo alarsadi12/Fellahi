@@ -31,11 +31,7 @@
   let activeProfileId = null;
 
   const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[c]);
 
   const avatar = (url, name = "فلاح", size = "") => {
@@ -49,132 +45,119 @@
     if ($("fc-message")) $("fc-message").textContent = text || "";
   };
 
+  // رفع الصور مباشرة إلى Supabase Storage
+  async function uploadCommunityImage(file, path) {
+    if (!currentUser) throw new Error("سجل الدخول أولاً.");
+    if (!file || !file.type.startsWith("image/")) {
+      throw new Error("الملف المختار ليس صورة.");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("الصورة يجب أن تكون أقل من 5 ميغابايت.");
+    }
+
+    const { data, error } = await db.auth.getSession();
+    if (error) throw error;
+
+    const token = data?.session?.access_token;
+    if (!token) throw new Error("انتهت جلسة الدخول. سجل الدخول من جديد.");
+
+    const safePath = path.split("/")
+      .map(part => encodeURIComponent(part))
+      .join("/");
+
+    const response = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/fellahi-images/${safePath}`,
+      {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": file.type || "application/octet-stream",
+          "x-upsert": "true"
+        },
+        body: file
+      }
+    );
+
+    const responseText = await response.text();
+    let result = {};
+
+    if (responseText) {
+      try {
+        result = JSON.parse(responseText);
+      } catch (_) {
+        const preview = responseText.replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ").trim().slice(0, 180);
+
+        throw new Error(
+          "خادم الصور لم يرجع استجابة صحيحة. HTTP " +
+          response.status + (preview ? " — " + preview : "")
+        );
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result.message || result.error || result.msg ||
+        "فشل رفع الصورة. HTTP " + response.status
+      );
+    }
+
+    const publicResult = db.storage
+      .from("fellahi-images")
+      .getPublicUrl(path);
+
+    const publicUrl = publicResult?.data?.publicUrl;
+    if (!publicUrl) throw new Error("تعذر إنشاء رابط الصورة.");
+
+    return publicUrl;
+  }
+
   root.innerHTML = `
     <style>
-      #community-app,#community{
-        direction:rtl;text-align:right;font-family:inherit;color:#183329;
-      }
-      #community-app{
-        --ig-green:#176b45;--ig-border:#e8eee9;--ig-muted:#87938b;
-        padding-bottom:75px;background:#f7faf8;min-height:100vh;
-        width:100%;box-sizing:border-box;
-      }
+      #community-app,#community{direction:rtl;text-align:right;font-family:inherit;color:#183329}
+      #community-app{--ig-green:#176b45;--ig-border:#e8eee9;--ig-muted:#87938b;padding-bottom:75px;background:#f7faf8;min-height:100vh;width:100%;box-sizing:border-box}
       #community-app *{box-sizing:border-box}
       .fc-hidden{display:none!important}
-      .fc-topbar{
-        position:sticky;top:0;z-index:20;background:#fff;
-        border-bottom:1px solid var(--ig-border);
-        display:flex;align-items:center;justify-content:space-between;
-        padding:12px 14px;
-      }
+      .fc-topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--ig-border);display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
       .fc-brand{font-size:19px;font-weight:900;color:#176b45}
       .fc-top-actions{display:flex;gap:8px;align-items:center}
-      .fc-icon-btn{
-        border:0;background:#f0f5f1;border-radius:50%;
-        width:39px;height:39px;font-size:19px;cursor:pointer;
-        position:relative;
-      }
-      .fc-notification-badge{
-        position:absolute;top:-4px;right:-5px;
-        min-width:18px;height:18px;padding:0 4px;
-        border-radius:20px;background:#e34252;color:white;
-        font-size:10px;font-weight:900;display:flex;
-        align-items:center;justify-content:center;
-        border:2px solid white;
-      }
-      .fc-message{
-        margin:8px 12px;color:#176b45;font-size:12px;
-        min-height:0;line-height:1.7;
-      }
-      .fc-auth-card,.fc-box{
-        background:#fff;border:1px solid var(--ig-border);
-        border-radius:15px;padding:14px;margin:12px 0;
-      }
+      .fc-icon-btn{border:0;background:#f0f5f1;border-radius:50%;width:39px;height:39px;font-size:19px;cursor:pointer;position:relative}
+      .fc-notification-badge{position:absolute;top:-4px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:20px;background:#e34252;color:white;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid white}
+      .fc-message{margin:8px 12px;color:#176b45;font-size:12px;min-height:0;line-height:1.7}
+      .fc-auth-card,.fc-box{background:#fff;border:1px solid var(--ig-border);border-radius:15px;padding:14px;margin:12px 0}
       .fc-auth-card h3{margin:4px 0 8px}
-      .fc-input{
-        width:100%;box-sizing:border-box;padding:12px;
-        border:1px solid #dfe8e1;border-radius:10px;
-        margin:6px 0;font:inherit;background:#fff;
-      }
-      .fc-btn{
-        border:0;border-radius:10px;padding:10px 15px;
-        background:#176b45;color:white;font:inherit;
-        cursor:pointer;font-weight:700;
-      }
+      .fc-input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #dfe8e1;border-radius:10px;margin:6px 0;font:inherit;background:#fff}
+      .fc-btn{border:0;border-radius:10px;padding:10px 15px;background:#176b45;color:white;font:inherit;cursor:pointer;font-weight:700}
       .fc-btn:disabled{opacity:.6;cursor:wait}
       .fc-light{background:#edf5ef;color:#176b45}
       .fc-muted{color:var(--ig-muted);font-size:12px;line-height:1.7}
       .fc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
       .fc-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
       .fc-auth-actions .fc-btn{width:100%}
-      .fc-avatar{
-        width:43px;height:43px;border-radius:50%;object-fit:cover;
-        border:2px solid #d7eadc;flex-shrink:0;
-      }
-      .fc-avatar-placeholder{
-        display:flex;align-items:center;justify-content:center;
-        background:#e9f4ec;font-size:23px;
-      }
-      .fc-stories{
-        display:flex;gap:14px;overflow-x:auto;padding:13px 12px;
-        background:#fff;border-bottom:1px solid var(--ig-border);
-      }
-      .fc-story{
-        flex:0 0 65px;text-align:center;cursor:pointer;
-        font-size:11px;color:#526258;
-      }
-      .fc-story-ring{
-        width:61px;height:61px;border-radius:50%;padding:3px;
-        margin:0 auto 5px;
-        background:linear-gradient(45deg,#f5a623,#d64b6b,#176b45);
-      }
-      .fc-story-ring>div{
-        width:100%;height:100%;border:2px solid white;
-        border-radius:50%;overflow:hidden;background:#eaf5ee;
-        display:grid;place-items:center;
-      }
+      .fc-avatar{width:43px;height:43px;border-radius:50%;object-fit:cover;border:2px solid #d7eadc;flex-shrink:0}
+      .fc-avatar-placeholder{display:flex;align-items:center;justify-content:center;background:#e9f4ec;font-size:23px}
+      .fc-stories{display:flex;gap:14px;overflow-x:auto;padding:13px 12px;background:#fff;border-bottom:1px solid var(--ig-border)}
+      .fc-story{flex:0 0 65px;text-align:center;cursor:pointer;font-size:11px;color:#526258}
+      .fc-story-ring{width:61px;height:61px;border-radius:50%;padding:3px;margin:0 auto 5px;background:linear-gradient(45deg,#f5a623,#d64b6b,#176b45)}
+      .fc-story-ring>div{width:100%;height:100%;border:2px solid white;border-radius:50%;overflow:hidden;background:#eaf5ee;display:grid;place-items:center}
       .fc-story-ring span{font-size:25px}
-      .fc-compose{
-        background:#fff;padding:13px 12px;
-        border-bottom:1px solid var(--ig-border);
-      }
+      .fc-compose{background:#fff;padding:13px 12px;border-bottom:1px solid var(--ig-border)}
       .fc-compose-top{display:flex;align-items:center;gap:10px}
-      .fc-compose-prompt{
-        flex:1;border:1px solid #e5ece7;border-radius:22px;
-        padding:11px 14px;color:#849087;font-size:13px;
-        background:#f8faf8;cursor:pointer;text-align:right;
-      }
+      .fc-compose-prompt{flex:1;border:1px solid #e5ece7;border-radius:22px;padding:11px 14px;color:#849087;font-size:13px;background:#f8faf8;cursor:pointer;text-align:right}
       .fc-compose-extra{display:flex;gap:9px;margin-top:11px}
-      .fc-compose-extra button{
-        flex:1;border:0;background:#f0f6f1;color:#176b45;
-        border-radius:9px;padding:9px;font:inherit;font-size:12px;
-      }
-      .fc-post{
-        background:#fff;border-bottom:8px solid #f1f5f2;
-        padding:13px 12px;margin:0;
-      }
-      .fc-post-head{
-        display:flex;align-items:center;justify-content:space-between;
-        gap:8px;margin-bottom:10px;
-      }
+      .fc-compose-extra button{flex:1;border:0;background:#f0f6f1;color:#176b45;border-radius:9px;padding:9px;font:inherit;font-size:12px}
+      .fc-post{background:#fff;border-bottom:8px solid #f1f5f2;padding:13px 12px;margin:0}
+      .fc-post-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
       .fc-author{display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0}
       .fc-author-info{min-width:0}
       .fc-author-info strong{display:block;font-size:13px;color:#1c392a}
       .fc-author-info .fc-muted{font-size:10px}
       .fc-post-menu{border:0;background:transparent;font-size:22px;color:#758078}
-      .fc-post-text{
-        font-size:14px;line-height:1.8;white-space:pre-wrap;
-        overflow-wrap:anywhere;margin:8px 0 11px;
-      }
-      .fc-post-image{
-        width:calc(100% + 24px);margin:0 -12px;
-        max-height:520px;object-fit:cover;display:block;background:#f0f3f0;
-      }
+      .fc-post-text{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 11px}
+      .fc-post-image{width:calc(100% + 24px);margin:0 -12px;max-height:520px;object-fit:cover;display:block;background:#f0f3f0}
       .fc-post-actions{display:flex;align-items:center;gap:17px;padding:10px 0 3px}
-      .fc-action{
-        border:0;background:none;padding:3px 0;color:#263c2f;
-        font:inherit;font-size:14px;cursor:pointer;
-      }
+      .fc-action{border:0;background:none;padding:3px 0;color:#263c2f;font:inherit;font-size:14px;cursor:pointer}
       .fc-action.liked{color:#e34252}
       .fc-likes-count{font-size:12px;font-weight:800;margin-top:5px}
       .fc-comment-preview{font-size:12px;color:#58665d;margin-top:5px}
@@ -184,34 +167,15 @@
       .fc-comment-form{display:flex;gap:6px;margin-top:8px}
       .fc-comment-form input{flex:1;min-width:0;margin:0}
       .fc-comment-form button{white-space:nowrap}
-      .fc-bottom-nav{
-        position:fixed;bottom:0;left:0;right:0;z-index:30;
-        background:#fff;border-top:1px solid var(--ig-border);
-        display:grid;grid-template-columns:repeat(4,1fr);
-        padding:8px 3px calc(8px + env(safe-area-inset-bottom));
-      }
-      .fc-bottom-nav button{
-        border:0;background:none;color:#68766d;font-size:10px;
-        padding:3px;cursor:pointer;
-      }
+      .fc-bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--ig-border);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 3px calc(8px + env(safe-area-inset-bottom))}
+      .fc-bottom-nav button{border:0;background:none;color:#68766d;font-size:10px;padding:3px;cursor:pointer}
       .fc-bottom-nav button span{display:block;font-size:21px;margin-bottom:2px}
       .fc-bottom-nav button.active{color:#176b45;font-weight:900}
-      .fc-profile-head{
-        background:#fff;border-bottom:1px solid var(--ig-border);
-        padding:15px 13px;
-      }
+      .fc-profile-head{background:#fff;border-bottom:1px solid var(--ig-border);padding:15px 13px}
       .fc-profile-top{display:flex;align-items:center;gap:18px}
-      .fc-profile-avatar{
-        width:88px;height:88px;border-radius:50%;
-        object-fit:cover;border:3px solid #e3efe6;
-      }
-      .fc-profile-stats{
-        display:flex;justify-content:space-around;flex:1;text-align:center;
-      }
-      .fc-profile-stats button{
-        border:0;background:transparent;padding:5px 2px;
-        cursor:pointer;color:inherit;font:inherit;min-width:0;
-      }
+      .fc-profile-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #e3efe6}
+      .fc-profile-stats{display:flex;justify-content:space-around;flex:1;text-align:center}
+      .fc-profile-stats button{border:0;background:transparent;padding:5px 2px;cursor:pointer;color:inherit;font:inherit;min-width:0}
       .fc-profile-stats strong{display:block;font-size:18px}
       .fc-profile-stats span{font-size:11px;color:#7a877e}
       .fc-profile-name{font-size:16px;font-weight:900;margin:12px 0 3px}
@@ -220,78 +184,30 @@
       .fc-grid-item{aspect-ratio:1/1;background:#edf2ee;overflow:hidden;position:relative;cursor:pointer}
       .fc-grid-item img{width:100%;height:100%;object-fit:cover}
       .fc-grid-text{font-size:10px;padding:7px;line-height:1.5;overflow:hidden;max-height:100%}
-      .fc-grid-count{
-        position:absolute;bottom:5px;left:5px;color:white;
-        background:#0009;padding:3px 6px;border-radius:8px;font-size:10px;
-      }
-      .fc-profile-tabs{
-        display:flex;justify-content:center;padding:13px;
-        border-bottom:1px solid var(--ig-border);
-        color:#176b45;font-weight:900;font-size:13px;
-      }
-      .fc-profile-edit{
-        width:100%;margin-top:12px;background:#edf5ef;color:#176b45;
-        border:0;border-radius:9px;padding:9px;font:inherit;font-weight:800;
-        cursor:pointer;
-      }
-      .fc-follow-btn{
-        width:100%;margin-top:10px;background:#176b45;color:white;
-        border:0;border-radius:9px;padding:10px;font:inherit;
-        font-weight:800;cursor:pointer;
-      }
+      .fc-grid-count{position:absolute;bottom:5px;left:5px;color:white;background:#0009;padding:3px 6px;border-radius:8px;font-size:10px}
+      .fc-profile-tabs{display:flex;justify-content:center;padding:13px;border-bottom:1px solid var(--ig-border);color:#176b45;font-weight:900;font-size:13px}
+      .fc-profile-edit{width:100%;margin-top:12px;background:#edf5ef;color:#176b45;border:0;border-radius:9px;padding:9px;font:inherit;font-weight:800;cursor:pointer}
+      .fc-follow-btn{width:100%;margin-top:10px;background:#176b45;color:white;border:0;border-radius:9px;padding:10px;font:inherit;font-weight:800;cursor:pointer}
       .fc-follow-btn.following{background:#edf5ef;color:#176b45}
-      .fc-profile-panel{
-        background:#fff;border:1px solid var(--ig-border);
-        border-radius:14px;padding:14px;margin:12px 0;
-      }
-      .fc-photo-preview{
-        width:100px;height:100px;border-radius:50%;
-        object-fit:cover;display:block;margin:10px auto;
-        border:3px solid #176b45;
-      }
+      .fc-profile-panel{background:#fff;border:1px solid var(--ig-border);border-radius:14px;padding:14px;margin:12px 0}
+      .fc-photo-preview{width:100px;height:100px;border-radius:50%;object-fit:cover;display:block;margin:10px auto;border:3px solid #176b45}
       .fc-label{display:block;font-size:12px;font-weight:800;margin-top:10px}
       .fc-empty{text-align:center;padding:35px 15px;color:#7b887f;background:#fff;font-size:13px;line-height:2}
       .fc-detail-image{width:100%;max-height:500px;object-fit:contain;background:#f0f3f0;border-radius:10px}
       .fc-admin{padding:12px;background:#fff}
-      .fc-follow-user{
-        display:flex;align-items:center;gap:10px;padding:10px;
-        background:#fff;border-bottom:1px solid #edf1ed;cursor:pointer;
-      }
+      .fc-follow-user{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #edf1ed;cursor:pointer}
       .fc-follow-user strong{font-size:13px}
       .fc-follow-user small{display:block;color:#87938b;font-size:11px;margin-top:3px}
-
-      /* تصميم الإشعارات */
-      .fc-notifications{
-        background:#fff;min-height:55vh;
-      }
-      .fc-notifications-head{
-        display:flex;align-items:center;justify-content:space-between;
-        gap:8px;padding:13px;border-bottom:1px solid var(--ig-border);
-      }
-      .fc-notifications-head h3{
-        margin:0;color:#176b45;font-size:17px;
-      }
-      .fc-notification-item{
-        display:flex;align-items:center;gap:10px;padding:13px;
-        border-bottom:1px solid #edf1ed;cursor:pointer;
-      }
-      .fc-notification-item.unread{
-        background:#edf7ef;
-      }
-      .fc-notification-item:active{background:#e4f0e7}
+      .fc-notifications{background:#fff;min-height:55vh}
+      .fc-notifications-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px;border-bottom:1px solid var(--ig-border)}
+      .fc-notifications-head h3{margin:0;color:#176b45;font-size:17px}
+      .fc-notification-item{display:flex;align-items:center;gap:10px;padding:13px;border-bottom:1px solid #edf1ed;cursor:pointer}
+      .fc-notification-item.unread{background:#edf7ef}
       .fc-notification-info{flex:1;min-width:0;font-size:13px;line-height:1.7}
       .fc-notification-info strong{color:#183329}
       .fc-notification-time{display:block;color:#87938b;font-size:10px;margin-top:3px}
-      .fc-notification-dot{
-        width:9px;height:9px;border-radius:50%;
-        background:#176b45;flex-shrink:0;
-      }
-      .fc-notification-symbol{
-        width:34px;height:34px;border-radius:50%;
-        display:grid;place-items:center;background:#f0f5f1;
-        flex-shrink:0;font-size:17px;
-      }
-
+      .fc-notification-dot{width:9px;height:9px;border-radius:50%;background:#176b45;flex-shrink:0}
+      .fc-notification-symbol{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f0f5f1;flex-shrink:0;font-size:17px}
       @media(min-width:620px){
         #community-app{max-width:650px;margin:0 auto;border-left:1px solid #e8eee9;border-right:1px solid #e8eee9}
         .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
@@ -308,8 +224,7 @@
       </div>
       <div class="fc-top-actions">
         <button class="fc-icon-btn" id="fc-search-toggle" title="بحث">⌕</button>
-        <button class="fc-icon-btn" id="fc-notifications-button" title="الإشعارات">
-          🔔
+        <button class="fc-icon-btn" id="fc-notifications-button" title="الإشعارات">🔔
           <span id="fc-notification-count" class="fc-notification-badge fc-hidden">0</span>
         </button>
         <button class="fc-icon-btn" id="fc-profile-shortcut" title="ملفي">👤</button>
@@ -344,10 +259,7 @@
 
     <div id="fc-user" class="fc-hidden">
       <div class="fc-stories">
-        <div class="fc-story" id="fc-my-story">
-          <div class="fc-story-ring"><div><span>＋</span></div></div>
-          حسابي
-        </div>
+        <div class="fc-story" id="fc-my-story"><div class="fc-story-ring"><div><span>＋</span></div></div>حسابي</div>
         <div class="fc-story"><div class="fc-story-ring"><div><span>🌱</span></div></div>المحاصيل</div>
         <div class="fc-story"><div class="fc-story-ring"><div><span>🚜</span></div></div>المعدات</div>
         <div class="fc-story"><div class="fc-story-ring"><div><span>💧</span></div></div>السقي</div>
@@ -375,7 +287,6 @@
           <button class="fc-btn fc-light" id="fc-publish-close">إلغاء</button>
         </div>
       </div>
-
       <div id="fc-feed"></div>
     </div>
 
@@ -386,8 +297,7 @@
     <div id="fc-profile-panel" class="fc-profile-panel fc-hidden">
       <h3 style="margin-top:0;color:#176b45">تعديل حسابك</h3>
       <label class="fc-label">الصورة الشخصية</label>
-      <img id="fc-avatar-preview" class="fc-photo-preview"
-        src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer" alt="الصورة الشخصية">
+      <img id="fc-avatar-preview" class="fc-photo-preview" src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer" alt="الصورة الشخصية">
       <input id="fc-avatar-file" class="fc-input" type="file" accept="image/*">
       <label class="fc-label">الاسم الكامل</label>
       <input id="fc-profile-name" class="fc-input" placeholder="اسمك">
@@ -413,8 +323,6 @@
     </div>
   `;
 
-  // مهم: لا نشغل enterCommunityMode هنا حتى لا تختفي الصفحة الرئيسية.
-
   $("fc-back-app").onclick = () => {
     const backButton = communitySection?.querySelector('.back[data-go="home"]');
     if (backButton) backButton.click();
@@ -435,7 +343,6 @@
     document.querySelectorAll("#fc-bottom-nav button").forEach(b => {
       b.classList.toggle("active", b.dataset.tab === tab);
     });
-
     hideMainPanels();
 
     if (tab === "feed") {
@@ -489,17 +396,14 @@
     setTab("feed");
   };
 
-  // معاينة الصور
   $("fc-avatar-file").onchange = () => {
     const file = $("fc-avatar-file").files[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
       msg("اختار صورة أقل من 5 ميغابايت.");
       $("fc-avatar-file").value = "";
       return;
     }
-
     $("fc-avatar-preview").src = URL.createObjectURL(file);
   };
 
@@ -507,23 +411,18 @@
     const file = $("fc-image").files[0];
     $("fc-image-preview").innerHTML = "";
     if (!file) return;
-
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
       msg("الصورة يجب أن تكون أقل من 5 ميغابايت.");
       $("fc-image").value = "";
       return;
     }
-
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
     img.style.cssText = "width:100%;max-height:230px;object-fit:contain;border-radius:10px;margin-top:8px";
     $("fc-image-preview").append(img);
   };
 
-  // =========================
-  // نظام الإشعارات
-  // =========================
-
+  // الإشعارات
   function notificationText(type) {
     if (type === "follow") return "بدأ بمتابعتك.";
     if (type === "like") return "أعجبه منشورك.";
@@ -540,11 +439,8 @@
 
   function notificationDate(date) {
     if (!date) return "";
-    try {
-      return new Date(date).toLocaleString("ar");
-    } catch (e) {
-      return "";
-    }
+    try { return new Date(date).toLocaleString("ar"); }
+    catch (_) { return ""; }
   }
 
   async function updateNotificationCount() {
@@ -571,22 +467,16 @@
 
   async function markNotificationRead(notificationId) {
     if (!currentUser) return;
-
     const {error} = await db.from("notifications")
       .update({is_read:true})
       .eq("id",notificationId)
       .eq("recipient_id",currentUser.id);
-
-    if (error) {
-      console.warn("تعذر تحديد الإشعار كمقروء:",error.message);
-    }
-
+    if (error) console.warn("تعذر تحديد الإشعار كمقروء:",error.message);
     await updateNotificationCount();
   }
 
   async function markAllNotificationsRead() {
     if (!currentUser) return;
-
     const button = $("fc-notifications-read-all");
     if (button) {
       button.disabled = true;
@@ -598,9 +488,8 @@
       .eq("recipient_id",currentUser.id)
       .eq("is_read",false);
 
-    if (error) {
-      msg("تعذر تحديث الإشعارات: " + error.message);
-    } else {
+    if (error) msg("تعذر تحديث الإشعارات: " + error.message);
+    else {
       msg("تم تحديد جميع الإشعارات كمقروءة.");
       await openNotifications();
     }
@@ -617,9 +506,9 @@
     hideMainPanels();
     $("fc-user").classList.add("fc-hidden");
     $("fc-search-box").classList.add("fc-hidden");
-    $("fc-notifications-panel").classList.remove("fc-hidden");
 
     const panel = $("fc-notifications-panel");
+    panel.classList.remove("fc-hidden");
     panel.innerHTML = '<div class="fc-empty">جاري تحميل الإشعارات...</div>';
 
     try {
@@ -632,62 +521,39 @@
       if (error) throw error;
 
       const notifications = data || [];
-      const actorIds = [...new Set(
-        notifications.map(n => n.actor_id).filter(Boolean)
-      )];
-
+      const actorIds = [...new Set(notifications.map(n => n.actor_id).filter(Boolean))];
       await getProfiles(actorIds);
 
       panel.innerHTML = `
         <div class="fc-notifications">
           <div class="fc-notifications-head">
             <h3>🔔 الإشعارات</h3>
-            <button class="fc-btn fc-light" id="fc-notifications-read-all"
-              style="font-size:11px;padding:8px">
-              تحديد الكل كمقروء
-            </button>
+            <button class="fc-btn fc-light" id="fc-notifications-read-all" style="font-size:11px;padding:8px">تحديد الكل كمقروء</button>
           </div>
-
-          <button class="fc-profile-edit" id="fc-notifications-back"
-            style="margin:10px;width:calc(100% - 20px)">
-            ← العودة للمنشورات
-          </button>
-
+          <button class="fc-profile-edit" id="fc-notifications-back" style="margin:10px;width:calc(100% - 20px)">← العودة للمنشورات</button>
           ${notifications.length ? notifications.map(n => {
             const actor = profilesCache[n.actor_id] || {};
             const actorName = actor.full_name || "مستخدم";
             return `
-              <div class="fc-notification-item ${n.is_read ? "" : "unread"}"
-                data-notification="${esc(n.id)}">
+              <div class="fc-notification-item ${n.is_read ? "" : "unread"}" data-notification="${esc(n.id)}">
                 ${avatar(actor.avatar_url,actorName)}
                 <div class="fc-notification-info">
-                  <strong>${esc(actorName)}</strong>
-                  ${esc(notificationText(n.type))}
+                  <strong>${esc(actorName)}</strong> ${esc(notificationText(n.type))}
                   <span class="fc-notification-time">${esc(notificationDate(n.created_at))}</span>
                 </div>
                 <div class="fc-notification-symbol">${notificationIcon(n.type)}</div>
                 ${n.is_read ? "" : '<span class="fc-notification-dot"></span>'}
-              </div>
-            `;
+              </div>`;
           }).join("") : `
-            <div class="fc-empty">
-              🔔<br>
-              لا توجد إشعارات حالياً.<br>
-              ستظهر هنا التفاعلات الجديدة مع حسابك ومنشوراتك.
-            </div>
-          `}
-        </div>
-      `;
+            <div class="fc-empty">🔔<br>لا توجد إشعارات حالياً.<br>ستظهر هنا التفاعلات الجديدة مع حسابك ومنشوراتك.</div>`}
+        </div>`;
 
       $("fc-notifications-back").onclick = () => setTab("feed");
       $("fc-notifications-read-all").onclick = markAllNotificationsRead;
 
       panel.querySelectorAll("[data-notification]").forEach(item => {
         item.onclick = async () => {
-          const notification = notifications.find(
-            n => String(n.id) === item.dataset.notification
-          );
-
+          const notification = notifications.find(n => String(n.id) === item.dataset.notification);
           if (!notification) return;
 
           await markNotificationRead(notification.id);
@@ -701,45 +567,29 @@
           if (notification.post_id) {
             try {
               const {data:post,error:postError} = await db.from("posts")
-                .select("*")
-                .eq("id",notification.post_id)
-                .maybeSingle();
-
+                .select("*").eq("id",notification.post_id).maybeSingle();
               if (postError) throw postError;
-
               if (!post) {
                 msg("هذا المنشور لم يعد متاحاً.");
                 setTab("feed");
                 return;
               }
-
               await getProfiles([post.user_id]);
-              const author = profilesCache[post.user_id] || {};
               $("fc-user").classList.add("fc-hidden");
               $("fc-public-profile").classList.add("fc-hidden");
               $("fc-post-detail").classList.remove("fc-hidden");
-              openPostDetail(post,author);
+              openPostDetail(post,profilesCache[post.user_id] || {});
             } catch (e) {
               msg("تعذر فتح المنشور: " + e.message);
               setTab("feed");
             }
-          } else {
-            setTab("feed");
-          }
+          } else setTab("feed");
         };
       });
 
       await updateNotificationCount();
-
     } catch (e) {
-      panel.innerHTML = `
-        <div class="fc-empty">
-          تعذر تحميل الإشعارات.<br>
-          ${esc(e.message)}
-          <button class="fc-profile-edit" id="fc-notifications-error-back">رجوع</button>
-        </div>
-      `;
-
+      panel.innerHTML = `<div class="fc-empty">تعذر تحميل الإشعارات.<br>${esc(e.message)}<button class="fc-profile-edit" id="fc-notifications-error-back">رجوع</button></div>`;
       $("fc-notifications-error-back").onclick = () => setTab("feed");
     }
 
@@ -757,31 +607,23 @@
     if (currentUser) {
       let {data:profile,error:profileError} = await db.from("profiles")
         .select("id,full_name,role,is_banned,city,bio,crops,avatar_url")
-        .eq("id",currentUser.id)
-        .maybeSingle();
+        .eq("id",currentUser.id).maybeSingle();
 
       if (!profile && !profileError) {
-        const fallbackName =
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split("@")[0] ||
-          "فلاح";
+        const fallbackName = currentUser.user_metadata?.full_name ||
+          currentUser.email?.split("@")[0] || "فلاح";
 
         const {error:insertError} = await db.from("profiles").upsert({
-          id:currentUser.id,
-          full_name:fallbackName
+          id:currentUser.id, full_name:fallbackName
         },{onConflict:"id",ignoreDuplicates:true});
 
         if (!insertError) {
           const result = await db.from("profiles")
             .select("id,full_name,role,is_banned,city,bio,crops,avatar_url")
-            .eq("id",currentUser.id)
-            .maybeSingle();
-
+            .eq("id",currentUser.id).maybeSingle();
           profile = result.data;
           profileError = result.error;
-        } else {
-          console.warn("تعذر إنشاء الملف الشخصي:",insertError.message);
-        }
+        } else console.warn("تعذر إنشاء الملف الشخصي:",insertError.message);
       }
 
       if (profileError) msg("تعذر تحميل الملف الشخصي: " + profileError.message);
@@ -794,18 +636,12 @@
         isAdmin = profile?.role === "admin";
         profilesCache[currentUser.id] = profile || {};
 
-        $("fc-profile-name").value =
-          profile?.full_name || currentUser.user_metadata?.full_name || "";
+        $("fc-profile-name").value = profile?.full_name || currentUser.user_metadata?.full_name || "";
         $("fc-profile-city").value = profile?.city || "";
         $("fc-profile-bio").value = profile?.bio || "";
-        $("fc-profile-crops").value =
-          Array.isArray(profile?.crops) ? profile.crops.join("، ") : "";
-
-        $("fc-avatar-preview").src = profile?.avatar_url ||
-          "https://placehold.co/200x200/e5f2e9/176b45?text=Farmer";
-
-        $("fc-compose-avatar").innerHTML =
-          avatar(profile?.avatar_url,profile?.full_name);
+        $("fc-profile-crops").value = Array.isArray(profile?.crops) ? profile.crops.join("، ") : "";
+        $("fc-avatar-preview").src = profile?.avatar_url || "https://placehold.co/200x200/e5f2e9/176b45?text=Farmer";
+        $("fc-compose-avatar").innerHTML = avatar(profile?.avatar_url,profile?.full_name);
 
         await updateNotificationCount();
       }
@@ -825,7 +661,7 @@
     updateAdminButton();
   }
 
-  // حفظ الملف الشخصي
+  // حفظ الملف الشخصي — إصلاح رفع الصورة
   $("fc-profile-save").onclick = async () => {
     if (!currentUser) return msg("سجل الدخول أولاً.");
 
@@ -846,19 +682,15 @@
       const file = $("fc-avatar-file").files[0];
 
       if (file) {
+        msg("جاري رفع الصورة...");
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
         const path = `${currentUser.id}/avatar-${Date.now()}.${ext}`;
 
-        const {error:uploadError} = await db.storage
-          .from("fellahi-images")
-          .upload(path,file,{upsert:true});
-
-        if (uploadError) throw uploadError;
-
-        avatar_url = db.storage.from("fellahi-images")
-          .getPublicUrl(path).data.publicUrl;
+        avatar_url = await uploadCommunityImage(file,path);
       }
+
+      msg("جاري حفظ معلومات الحساب...");
 
       const {data:saved,error} = await db.from("profiles")
         .upsert({
@@ -875,7 +707,11 @@
       if (error) throw error;
 
       profilesCache[currentUser.id] = saved;
-      await db.auth.updateUser({data:{full_name}});
+
+      const {error:authError} = await db.auth.updateUser({
+        data:{full_name}
+      });
+      if (authError) console.warn("تعذر تحديث اسم الدخول:",authError.message);
 
       $("fc-avatar-file").value = "";
       $("fc-avatar-preview").src = avatar_url ||
@@ -890,7 +726,8 @@
         await openProfile(currentUser.id);
       }
     } catch (e) {
-      msg("تعذر حفظ الحساب: " + e.message);
+      console.error("Profile save error:",e);
+      msg("تعذر حفظ الحساب: " + (e.message || String(e)));
     } finally {
       button.disabled = false;
       button.textContent = "حفظ التغييرات";
@@ -903,11 +740,7 @@
   function editOwnProfile() {
     $("fc-public-profile").classList.add("fc-hidden");
     $("fc-profile-panel").classList.remove("fc-hidden");
-
-    window.scrollTo({
-      top:$("fc-profile-panel").offsetTop,
-      behavior:"smooth"
-    });
+    window.scrollTo({top:$("fc-profile-panel").offsetTop,behavior:"smooth"});
   }
 
   // إنشاء حساب
@@ -925,11 +758,8 @@
 
     try {
       const {data,error} = await db.auth.signUp({
-        email,
-        password,
-        options:{data:{full_name:name}}
+        email,password,options:{data:{full_name:name}}
       });
-
       if (error) throw error;
 
       if (data.user && data.session) {
@@ -949,15 +779,12 @@
   $("fc-login").onclick = async () => {
     const button = $("fc-login");
     button.disabled = true;
-
     try {
       const {error} = await db.auth.signInWithPassword({
         email:$("fc-email").value.trim(),
         password:$("fc-password").value
       });
-
       if (error) throw error;
-
       msg("تم تسجيل الدخول بنجاح.");
       await refreshUser();
     } catch (e) {
@@ -982,16 +809,13 @@
 
   $("fc-verify-code").onclick = async () => {
     if (!phonePending) return;
-
     const {error} = await db.auth.verifyOtp({
       phone:$("fc-phone").value.trim(),
       token:$("fc-code").value.trim(),
       type:"sms"
     });
-
-    if (error) {
-      msg(error.message);
-    } else {
+    if (error) msg(error.message);
+    else {
       msg("");
       await refreshUser();
     }
@@ -1003,7 +827,6 @@
 
     const content = $("fc-content").value.trim();
     const file = $("fc-image").files[0];
-
     if (!content && !file) return msg("اكتب شيئاً أو أضف صورة.");
 
     const button = $("fc-publish-btn");
@@ -1014,21 +837,10 @@
       let image_url = null;
 
       if (file) {
-        if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-          throw new Error("الصورة يجب أن تكون أقل من 5 ميغابايت.");
-        }
-
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
         const path = `${currentUser.id}/${Date.now()}.${ext}`;
-
-        const {error:uploadError} = await db.storage
-          .from("fellahi-images").upload(path,file);
-
-        if (uploadError) throw uploadError;
-
-        image_url = db.storage.from("fellahi-images")
-          .getPublicUrl(path).data.publicUrl;
+        image_url = await uploadCommunityImage(file,path);
       }
 
       const {error} = await db.from("posts").insert({
@@ -1036,7 +848,6 @@
         content:content || "صورة فلاحية",
         image_url
       });
-
       if (error) throw error;
 
       $("fc-content").value = "";
@@ -1058,52 +869,37 @@
   // تحميل بيانات الحسابات
   async function getProfiles(ids) {
     const missing = [...new Set(ids)].filter(id => id && !profilesCache[id]);
-
     if (missing.length) {
       const {data,error} = await db.from("profiles")
         .select("id,full_name,city,bio,crops,avatar_url,role")
         .in("id",missing);
-
-      if (error) {
-        console.warn("تعذر تحميل بعض الحسابات:",error.message);
-      }
-
+      if (error) console.warn("تعذر تحميل بعض الحسابات:",error.message);
       (data || []).forEach(p => profilesCache[p.id] = p);
     }
-
     return profilesCache;
   }
 
   // إحصائيات المتابعة
   async function getFollowStats(userId) {
     const [followersResult,followingResult] = await Promise.all([
-      db.from("follows")
-        .select("id",{count:"exact",head:true})
-        .eq("following_id",userId),
-      db.from("follows")
-        .select("id",{count:"exact",head:true})
-        .eq("follower_id",userId)
+      db.from("follows").select("id",{count:"exact",head:true}).eq("following_id",userId),
+      db.from("follows").select("id",{count:"exact",head:true}).eq("follower_id",userId)
     ]);
-
     if (followersResult.error) throw followersResult.error;
     if (followingResult.error) throw followingResult.error;
-
     return {
       followers:followersResult.count || 0,
       following:followingResult.count || 0
     };
   }
 
-  // واش المستخدم الحالي كيتابع هاد الحساب؟
   async function isFollowing(userId) {
     if (!currentUser || currentUser.id === userId) return false;
-
     const {data,error} = await db.from("follows")
       .select("id")
       .eq("follower_id",currentUser.id)
       .eq("following_id",userId)
       .maybeSingle();
-
     if (error) throw error;
     return !!data;
   }
@@ -1117,23 +913,14 @@
     const wasFollowing = button.dataset.following === "true";
 
     try {
-      let result;
-
-      if (wasFollowing) {
-        result = await db.from("follows")
-          .delete()
-          .eq("follower_id",currentUser.id)
-          .eq("following_id",userId);
-      } else {
-        result = await db.from("follows")
-          .insert({
-            follower_id:currentUser.id,
-            following_id:userId
+      const result = wasFollowing
+        ? await db.from("follows").delete()
+            .eq("follower_id",currentUser.id).eq("following_id",userId)
+        : await db.from("follows").insert({
+            follower_id:currentUser.id,following_id:userId
           });
-      }
 
       if (result.error) throw result.error;
-
       msg(wasFollowing ? "تم إلغاء المتابعة." : "أصبحت تتابع هذا الحساب 🌱");
       await openProfile(userId);
     } catch (e) {
@@ -1142,7 +929,7 @@
     }
   }
 
-  // عرض لائحة المتابعين أو الحسابات التي يتابعها الشخص
+  // لائحة المتابعين والمتابَعين
   async function showFollowList(userId,type) {
     const panel = $("fc-public-profile");
     const isFollowers = type === "followers";
@@ -1156,9 +943,7 @@
       const resultColumn = isFollowers ? "follower_id" : "following_id";
 
       const {data,error} = await db.from("follows")
-        .select("follower_id,following_id")
-        .eq(filterColumn,userId);
-
+        .select("follower_id,following_id").eq(filterColumn,userId);
       if (error) throw error;
 
       const ids = [...new Set((data || []).map(row => row[resultColumn]))];
@@ -1169,14 +954,12 @@
             <button class="fc-profile-edit" id="fc-follow-list-back">← رجوع للحساب</button>
             <h3>${title}</h3>
           </div>
-          <div class="fc-empty">لا توجد حسابات في هذه اللائحة بعد.</div>
-        `;
+          <div class="fc-empty">لا توجد حسابات في هذه اللائحة بعد.</div>`;
         $("fc-follow-list-back").onclick = () => openProfile(userId);
         return;
       }
 
       await getProfiles(ids);
-
       panel.innerHTML = `
         <div class="fc-profile-head">
           <button class="fc-profile-edit" id="fc-follow-list-back">← رجوع للحساب</button>
@@ -1192,34 +975,26 @@
                   <strong>${esc(profile.full_name || "فلاح")}</strong>
                   <small>${esc(profile.city || "عضو في المجتمع الفلاحي")}</small>
                 </div>
-              </div>
-            `;
+              </div>`;
           }).join("")}
-        </div>
-      `;
+        </div>`;
 
       $("fc-follow-list-back").onclick = () => openProfile(userId);
-
       panel.querySelectorAll("[data-follow-user]").forEach(item => {
         item.onclick = () => openProfile(item.dataset.followUser);
       });
-
     } catch (e) {
       panel.innerHTML = `
-        <div class="fc-empty">
-          تعذر تحميل اللائحة.<br>
-          ${esc(e.message)}
+        <div class="fc-empty">تعذر تحميل اللائحة.<br>${esc(e.message)}
           <button class="fc-profile-edit" id="fc-follow-list-back">رجوع للحساب</button>
-        </div>
-      `;
+        </div>`;
       $("fc-follow-list-back").onclick = () => openProfile(userId);
     }
   }
 
-  // فتح الملف الشخصي العام مع المتابعين
+  // الملف الشخصي العام
   async function openProfile(userId) {
     activeProfileId = userId;
-
     $("fc-profile-panel").classList.add("fc-hidden");
     $("fc-post-detail").classList.add("fc-hidden");
     $("fc-publish").classList.add("fc-hidden");
@@ -1232,9 +1007,7 @@
     try {
       const {data:profile,error} = await db.from("profiles")
         .select("id,full_name,city,bio,crops,avatar_url")
-        .eq("id",userId)
-        .maybeSingle();
-
+        .eq("id",userId).maybeSingle();
       if (error) throw error;
       if (!profile) {
         panel.innerHTML = '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
@@ -1244,14 +1017,11 @@
       profilesCache[userId] = profile;
 
       const [postsResult,followStats,followingState] = await Promise.all([
-        db.from("posts")
-          .select("*")
-          .eq("user_id",userId)
+        db.from("posts").select("*").eq("user_id",userId)
           .order("created_at",{ascending:false}),
         getFollowStats(userId),
         isFollowing(userId)
       ]);
-
       if (postsResult.error) throw postsResult.error;
 
       const userPosts = postsResult.data || [];
@@ -1260,9 +1030,7 @@
 
       if (postIds.length) {
         const result = await db.from("likes")
-          .select("post_id,user_id")
-          .in("post_id",postIds);
-
+          .select("post_id,user_id").in("post_id",postIds);
         if (result.error) throw result.error;
         likes = result.data || [];
       }
@@ -1277,55 +1045,31 @@
               ? `<img class="fc-profile-avatar" src="${esc(profile.avatar_url)}" alt="الصورة الشخصية">`
               : `<div class="fc-avatar fc-avatar-placeholder" style="width:88px;height:88px;font-size:42px">👨‍🌾</div>`}
             <div class="fc-profile-stats">
-              <div>
-                <strong>${userPosts.length}</strong>
-                <span>منشور</span>
-              </div>
-              <button type="button" id="fc-show-followers">
-                <strong>${followStats.followers}</strong>
-                <span>متابع</span>
-              </button>
-              <button type="button" id="fc-show-following">
-                <strong>${followStats.following}</strong>
-                <span>يتابع</span>
-              </button>
+              <div><strong>${userPosts.length}</strong><span>منشور</span></div>
+              <button type="button" id="fc-show-followers"><strong>${followStats.followers}</strong><span>متابع</span></button>
+              <button type="button" id="fc-show-following"><strong>${followStats.following}</strong><span>يتابع</span></button>
             </div>
           </div>
-
           <div class="fc-profile-name">${esc(profile.full_name || "فلاح")}</div>
           ${profile.city ? `<div class="fc-muted">📍 ${esc(profile.city)}</div>` : ""}
           ${profile.bio ? `<div class="fc-profile-bio">${esc(profile.bio)}</div>` : ""}
           ${crops.length ? `<div class="fc-muted" style="margin-top:7px">🌱 يهتم بـ: ${esc(crops.join("، "))}</div>` : ""}
-
           ${own
             ? `<button class="fc-profile-edit" id="fc-edit-own-profile">✏️ تعديل الملف الشخصي</button>`
             : currentUser
-              ? `<button class="fc-follow-btn ${followingState ? "following" : ""}"
-                   id="fc-follow-button"
-                   data-following="${followingState}">
-                   ${followingState ? "✓ تتابعه — إلغاء المتابعة" : "＋ متابعة"}
-                 </button>`
-              : `<p class="fc-muted" style="margin-top:10px">سجل الدخول لمتابعة هذا الحساب.</p>`
-          }
-
+              ? `<button class="fc-follow-btn ${followingState ? "following" : ""}" id="fc-follow-button" data-following="${followingState}">${followingState ? "✓ تتابعه — إلغاء المتابعة" : "＋ متابعة"}</button>`
+              : `<p class="fc-muted" style="margin-top:10px">سجل الدخول لمتابعة هذا الحساب.</p>`}
           <button class="fc-profile-edit" id="fc-profile-back">← العودة للمنشورات</button>
         </div>
-
         <div class="fc-profile-tabs">▦ المنشورات</div>
-
         ${userPosts.length ? `
           <div class="fc-profile-grid">
             ${userPosts.map(post => `
               <div class="fc-grid-item" data-open-profile-post="${esc(post.id)}">
-                ${post.image_url
-                  ? `<img src="${esc(post.image_url)}" loading="lazy" alt="منشور">`
-                  : `<div class="fc-grid-text">${esc(post.content)}</div>`}
+                ${post.image_url ? `<img src="${esc(post.image_url)}" loading="lazy" alt="منشور">` : `<div class="fc-grid-text">${esc(post.content)}</div>`}
                 <span class="fc-grid-count">❤️ ${likes.filter(l => l.post_id === post.id).length}</span>
-              </div>
-            `).join("")}
-          </div>
-        ` : '<div class="fc-empty">📷<br>لا توجد منشورات بعد.</div>'}
-      `;
+              </div>`).join("")}
+          </div>` : '<div class="fc-empty">📷<br>لا توجد منشورات بعد.</div>'}`;
 
       $("fc-profile-back").onclick = () => {
         panel.classList.add("fc-hidden");
@@ -1337,35 +1081,25 @@
       $("fc-show-following").onclick = () => showFollowList(userId,"following");
 
       const followButton = $("fc-follow-button");
-      if (followButton) {
-        followButton.onclick = () => toggleFollow(userId,followButton);
-      }
+      if (followButton) followButton.onclick = () => toggleFollow(userId,followButton);
 
-      if ($("fc-edit-own-profile")) {
-        $("fc-edit-own-profile").onclick = editOwnProfile;
-      }
+      if ($("fc-edit-own-profile")) $("fc-edit-own-profile").onclick = editOwnProfile;
 
       panel.querySelectorAll("[data-open-profile-post]").forEach(item => {
         item.onclick = () => {
-          const post = userPosts.find(
-            p => String(p.id) === item.dataset.openProfilePost
-          );
+          const post = userPosts.find(p => String(p.id) === item.dataset.openProfilePost);
           if (post) openPostDetail(post,profile);
         };
       });
 
       $("fc-user").classList.add("fc-hidden");
       window.scrollTo({top:root.offsetTop,behavior:"smooth"});
-
     } catch (e) {
       console.error("Profile error:",e);
       panel.innerHTML = `
-        <div class="fc-empty">
-          تعذر تحميل هذا الحساب.<br>
-          ${esc(e.message)}
+        <div class="fc-empty">تعذر تحميل هذا الحساب.<br>${esc(e.message)}
           <button class="fc-profile-edit" id="fc-profile-error-back">رجوع</button>
-        </div>
-      `;
+        </div>`;
       $("fc-profile-error-back").onclick = () => setTab("feed");
     }
   }
@@ -1392,8 +1126,7 @@
         ${post.image_url ? `<img class="fc-detail-image" src="${esc(post.image_url)}" alt="صورة المنشور">` : ""}
         <p class="fc-muted">${new Date(post.created_at).toLocaleString("ar")}</p>
         <button class="fc-btn fc-light" id="fc-detail-close">إغلاق المنشور</button>
-      </div>
-    `;
+      </div>`;
 
     $("fc-detail-close").onclick = () => detail.classList.add("fc-hidden");
     $("fc-detail-author").onclick = () => openProfile(profile.id);
@@ -1407,7 +1140,6 @@
 
     const visiblePosts = allPosts.filter(post => {
       const author = profilesCache[post.user_id] || {};
-
       return !query ||
         String(post.content || "").toLowerCase().includes(query) ||
         String(author.full_name || "").toLowerCase().includes(query) ||
@@ -1434,10 +1166,7 @@
               ${avatar(author.avatar_url,name)}
               <div class="fc-author-info">
                 <strong>${esc(name)}</strong>
-                <span class="fc-muted">
-                  ${author.city ? "📍 " + esc(author.city) + " · " : ""}
-                  ${new Date(post.created_at).toLocaleDateString("ar")}
-                </span>
+                <span class="fc-muted">${author.city ? "📍 " + esc(author.city) + " · " : ""}${new Date(post.created_at).toLocaleDateString("ar")}</span>
               </div>
             </div>
             ${canDelete ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>` : ""}
@@ -1445,39 +1174,25 @@
           ${post.content ? `<div class="fc-post-text">${esc(post.content)}</div>` : ""}
           ${post.image_url ? `<img class="fc-post-image" src="${esc(post.image_url)}" alt="صورة فلاحية" loading="lazy">` : ""}
           <div class="fc-post-actions">
-            <button class="fc-action ${liked ? "liked" : ""}" data-like="${esc(post.id)}">
-              ${liked ? "❤️" : "🤍"} إعجاب
-            </button>
+            <button class="fc-action ${liked ? "liked" : ""}" data-like="${esc(post.id)}">${liked ? "❤️" : "🤍"} إعجاب</button>
             <button class="fc-action" data-toggle-comments="${esc(post.id)}">💬 تعليق</button>
             <button class="fc-action" data-share="${esc(post.id)}">↗ مشاركة</button>
           </div>
           <div class="fc-likes-count">${postLikes.length} إعجاب</div>
-          ${postComments.length ? `
-            <div class="fc-comment-preview">
-              ${postComments.slice(-2).map(c =>
-                `<div><b>${esc(profilesCache[c.user_id]?.full_name || "فلاح")}</b> ${esc(c.content)}</div>`
-              ).join("")}
-            </div>
-          ` : ""}
+          ${postComments.length ? `<div class="fc-comment-preview">${postComments.slice(-2).map(c => `<div><b>${esc(profilesCache[c.user_id]?.full_name || "فلاح")}</b> ${esc(c.content)}</div>`).join("")}</div>` : ""}
           <div class="fc-comments fc-hidden" id="fc-comments-${esc(post.id)}">
             ${postComments.map(c => `
               <div class="fc-comment-row">
-                <b>${esc(profilesCache[c.user_id]?.full_name || "فلاح")}</b>
-                ${esc(c.content)}
-                ${(c.user_id === currentUser?.id || isAdmin)
-                  ? `<button class="fc-action" data-delete-comment="${esc(c.id)}">حذف</button>`
-                  : ""}
-              </div>
-            `).join("")}
+                <b>${esc(profilesCache[c.user_id]?.full_name || "فلاح")}</b> ${esc(c.content)}
+                ${(c.user_id === currentUser?.id || isAdmin) ? `<button class="fc-action" data-delete-comment="${esc(c.id)}">حذف</button>` : ""}
+              </div>`).join("")}
             ${currentUser ? `
               <div class="fc-comment-form">
                 <input class="fc-input" id="fc-comment-${esc(post.id)}" placeholder="اكتب تعليقاً...">
                 <button class="fc-btn" data-comment="${esc(post.id)}">إرسال</button>
-              </div>
-            ` : '<p class="fc-muted">سجل الدخول لإضافة تعليق.</p>'}
+              </div>` : '<p class="fc-muted">سجل الدخول لإضافة تعليق.</p>'}
           </div>
-        </article>
-      `;
+        </article>`;
     }).join("");
 
     feed.querySelectorAll("[data-profile]").forEach(el => {
@@ -1485,106 +1200,76 @@
     });
 
     feed.querySelectorAll("[data-toggle-comments]").forEach(btn => {
-      btn.onclick = () => {
-        $(`fc-comments-${btn.dataset.toggleComments}`).classList.toggle("fc-hidden");
-      };
+      btn.onclick = () => $(`fc-comments-${btn.dataset.toggleComments}`).classList.toggle("fc-hidden");
     });
 
-    // الإعجاب
     feed.querySelectorAll("[data-like]").forEach(btn => {
       btn.onclick = async () => {
         if (!currentUser) return msg("سجل الدخول أولاً.");
-
         const post_id = btn.dataset.like;
+
         const {data:existing,error:checkError} = await db.from("likes")
-          .select("post_id")
-          .eq("post_id",post_id)
-          .eq("user_id",currentUser.id)
-          .maybeSingle();
+          .select("post_id").eq("post_id",post_id)
+          .eq("user_id",currentUser.id).maybeSingle();
 
         if (checkError) return msg(checkError.message);
 
         const result = existing
-          ? await db.from("likes").delete()
-              .eq("post_id",post_id).eq("user_id",currentUser.id)
-          : await db.from("likes").insert({
-              post_id,
-              user_id:currentUser.id
-            });
+          ? await db.from("likes").delete().eq("post_id",post_id).eq("user_id",currentUser.id)
+          : await db.from("likes").insert({post_id,user_id:currentUser.id});
 
         if (result.error) msg(result.error.message);
         await loadPosts();
       };
     });
 
-    // التعليق
     feed.querySelectorAll("[data-comment]").forEach(btn => {
       btn.onclick = async () => {
         if (!currentUser) return msg("سجل الدخول أولاً.");
-
         const post_id = btn.dataset.comment;
         const content = $(`fc-comment-${post_id}`).value.trim();
         if (!content) return;
 
         const {error} = await db.from("comments").insert({
-          post_id,
-          user_id:currentUser.id,
-          content
+          post_id,user_id:currentUser.id,content
         });
-
         if (error) msg(error.message);
         await loadPosts();
       };
     });
 
-    // حذف منشور
     feed.querySelectorAll("[data-delete]").forEach(btn => {
       btn.onclick = async () => {
         if (!confirm("واش متأكد من حذف المنشور؟")) return;
-
-        const {error} = await db.from("posts")
-          .delete().eq("id",btn.dataset.delete);
-
+        const {error} = await db.from("posts").delete().eq("id",btn.dataset.delete);
         if (error) msg(error.message);
         await loadPosts();
       };
     });
 
-    // حذف تعليق
     feed.querySelectorAll("[data-delete-comment]").forEach(btn => {
       btn.onclick = async () => {
         if (!confirm("حذف التعليق؟")) return;
-
-        const {error} = await db.from("comments")
-          .delete().eq("id",btn.dataset.deleteComment);
-
+        const {error} = await db.from("comments").delete().eq("id",btn.dataset.deleteComment);
         if (error) msg(error.message);
         await loadPosts();
       };
     });
 
-    // مشاركة المنشور
     feed.querySelectorAll("[data-share]").forEach(btn => {
       btn.onclick = async () => {
         const post = allPosts.find(p => String(p.id) === btn.dataset.share);
         if (!post) return;
-
-        const shareText =
-          `${profilesCache[post.user_id]?.full_name || "فلاح"}: ${post.content || "منشور فلاحي"}`;
+        const shareText = `${profilesCache[post.user_id]?.full_name || "فلاح"}: ${post.content || "منشور فلاحي"}`;
 
         if (navigator.share) {
           try {
-            await navigator.share({
-              title:"المجتمع الفلاحي",
-              text:shareText
-            });
-          } catch(e) {}
+            await navigator.share({title:"المجتمع الفلاحي",text:shareText});
+          } catch (_) {}
         } else if (navigator.clipboard) {
           await navigator.clipboard.writeText(shareText);
           msg("تم نسخ المنشور للمشاركة.");
-        } else {
-          msg("المشاركة غير متاحة في هذا المتصفح.");
-        }
+        } else msg("المشاركة غير متاحة في هذا المتصفح.");
       };
     });
   }
@@ -1597,9 +1282,7 @@
     feed.innerHTML = '<div class="fc-empty">جاري تحميل المنشورات...</div>';
 
     const {data:posts,error} = await db.from("posts")
-      .select("*")
-      .order("created_at",{ascending:false})
-      .limit(100);
+      .select("*").order("created_at",{ascending:false}).limit(100);
 
     if (error) {
       feed.innerHTML = `<div class="fc-empty">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
@@ -1617,7 +1300,6 @@
 
     const userIds = [...new Set(allPosts.map(p => p.user_id))];
     const postIds = allPosts.map(p => p.id);
-
     await getProfiles(userIds);
 
     const [likesResult,commentsResult] = await Promise.all([
@@ -1630,7 +1312,6 @@
 
     const commentUserIds = [...new Set(allComments.map(c => c.user_id))];
     await getProfiles(commentUserIds);
-
     renderFeed();
   }
 
@@ -1644,7 +1325,6 @@
       btn.className = "fc-btn fc-light";
       btn.textContent = "🛡️ الإدارة";
       btn.style.cssText = "display:block;margin:10px 12px;width:calc(100% - 24px)";
-
       $("fc-user").appendChild(btn);
 
       const area = $("fc-admin-area");
@@ -1652,9 +1332,7 @@
 
       btn.onclick = async () => {
         area.classList.toggle("fc-hidden");
-        if (!area.classList.contains("fc-hidden")) {
-          await loadAdminPanel();
-        }
+        if (!area.classList.contains("fc-hidden")) await loadAdminPanel();
       };
     }
 
@@ -1663,15 +1341,12 @@
 
   async function loadAdminPanel() {
     if (!isAdmin || !currentUser) return;
-
     const area = $("fc-admin-area");
     area.innerHTML = '<p>جاري تحميل لوحة الإدارة...</p>';
 
     const [users,posts,comments] = await Promise.all([
-      db.from("profiles")
-        .select("id,full_name,role,created_at,is_banned")
-        .order("created_at",{ascending:false})
-        .limit(200),
+      db.from("profiles").select("id,full_name,role,created_at,is_banned")
+        .order("created_at",{ascending:false}).limit(200),
       db.from("posts").select("id",{count:"exact",head:true}),
       db.from("comments").select("id",{count:"exact",head:true})
     ]);
@@ -1694,28 +1369,20 @@
             <b>${esc(user.full_name || "مستخدم")}</b>
             <p class="fc-muted">الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}</p>
             ${user.id !== currentUser.id && user.role !== "admin" ? `
-              <button class="fc-btn fc-light" data-ban="${esc(user.id)}">
-                ${user.is_banned ? "إلغاء الحظر" : "حظر المستخدم"}
-              </button>
-            ` : ""}
-          </div>
-        `).join("")}
+              <button class="fc-btn fc-light" data-ban="${esc(user.id)}">${user.is_banned ? "إلغاء الحظر" : "حظر المستخدم"}</button>` : ""}
+          </div>`).join("")}
       </div>
-      <button class="fc-btn" id="fc-admin-refresh">تحديث البيانات</button>
-    `;
+      <button class="fc-btn" id="fc-admin-refresh">تحديث البيانات</button>`;
 
     area.querySelectorAll("[data-ban]").forEach(btn => {
       btn.onclick = async () => {
         const user = users.data.find(u => u.id === btn.dataset.ban);
         if (!user) return;
-
         const action = user.is_banned ? "إلغاء الحظر" : "حظر";
         if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
 
         const {error} = await db.from("profiles")
-          .update({is_banned:!user.is_banned})
-          .eq("id",user.id);
-
+          .update({is_banned:!user.is_banned}).eq("id",user.id);
         if (error) return msg(error.message);
 
         msg("تم تحديث حالة المستخدم.");
