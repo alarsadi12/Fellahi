@@ -159,11 +159,50 @@ $("publish").onclick = async function() {
   const priceValue = $("price").value;
   const city = $("city").value.trim();
   const phone = $("phone").value.trim();
+  const file = $("image").files[0];
 
   if (!title || !city || !phone) {
     message("عمر اسم المنتج والمدينة ورقم الهاتف.");
     return;
   }
+
+  if (file && !file.type.startsWith("image/")) {
+    message("اختار صورة فقط.");
+    return;
+  }
+
+  if (file && file.size > 5 * 1024 * 1024) {
+    message("الصورة خاصها تكون أقل من 5 ميغابايت.");
+    return;
+  }
+
+  let imageUrl = null;
+
+  if (file) {
+    message("جاري رفع الصورة...");
+
+    const ext = file.name.split(".").pop().toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || "jpg";
+
+    const path = user.id + "/" + Date.now() + "." + ext;
+
+    const { error: uploadError } = await db.storage
+      .from("fellahi-images")
+      .upload(path, file, { cacheControl: "3600" });
+
+    if (uploadError) {
+      message("تعذر رفع الصورة: " + uploadError.message);
+      return;
+    }
+
+    const { data: publicData } = db.storage
+      .from("fellahi-images")
+      .getPublicUrl(path);
+
+    imageUrl = publicData.publicUrl;
+  }
+
+  message("جاري نشر الإعلان...");
 
   const { error } = await db.from("market_ads").insert({
     user_id: user.id,
@@ -173,6 +212,7 @@ $("publish").onclick = async function() {
     price: priceValue === "" ? null : Number(priceValue),
     city,
     phone,
+    image_url: imageUrl,
     status: "active"
   });
 
@@ -187,6 +227,7 @@ $("publish").onclick = async function() {
   $("price").value = "";
   $("city").value = "";
   $("phone").value = "";
+  $("image").value = "";
 
   await loadAds();
 };
