@@ -1,14 +1,14 @@
+
 // مجتمع فلاحي 2.0 — Supabase
 (() => {
-  alert("بداية ملف المجتمع تعمل");
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  alert("Supabase يعمل");
+
   const root = document.getElementById("community-app") ||
                document.getElementById("community");
-alert(root ? "تم العثور على مساحة المجتمع" : "لم يتم العثور على مساحة المجتمع");
+
   if (!root) {
     console.error("Community container not found");
     return;
@@ -76,47 +76,51 @@ alert(root ? "تم العثور على مساحة المجتمع" : "لم يتم
   const msg = text => $("fc-message").textContent = text;
 
   async function refreshUser() {
-  const { data } = await db.auth.getUser();
-  currentUser = data.user || null;
-  isAdmin = false;
+    const { data } = await db.auth.getUser();
+    currentUser = data.user || null;
+    isAdmin = false;
 
-  if (currentUser) {
-    const { data: profile } = await db.from("profiles")
-      .select("full_name,role,is_banned")
-      .eq("id", currentUser.id)
-      .maybeSingle();
+    if (currentUser) {
+      const { data: profile } = await db.from("profiles")
+        .select("full_name,role,is_banned")
+        .eq("id", currentUser.id)
+        .maybeSingle();
 
-    if (profile?.is_banned) {
-      await db.auth.signOut();
-      currentUser = null;
-      alert("هذا الحساب محظور من طرف الإدارة.");
-    } else {
-      isAdmin = profile?.role === "admin";
+      if (profile?.is_banned) {
+        await db.auth.signOut();
+        currentUser = null;
+        alert("هذا الحساب محظور من طرف الإدارة.");
+      } else {
+        isAdmin = profile?.role === "admin";
 
-      $("fc-welcome").textContent =
-        "مرحباً " + (profile?.full_name || currentUser.email || currentUser.phone || "");
+        $("fc-welcome").textContent =
+          "مرحباً " + (profile?.full_name || currentUser.email || currentUser.phone || "");
 
-      if (isAdmin) {
-        $("fc-welcome").textContent += " — المشرف";
+        if (isAdmin) {
+          $("fc-welcome").textContent += " — المشرف";
+        }
       }
     }
-  }
 
-  $("fc-auth").classList.toggle("fc-hidden", !!currentUser);
-  $("fc-user").classList.toggle("fc-hidden", !currentUser);
-  $("fc-publish").classList.toggle("fc-hidden", !currentUser);
-await loadPosts();
-  
+    $("fc-auth").classList.toggle("fc-hidden", !!currentUser);
+    $("fc-user").classList.toggle("fc-hidden", !currentUser);
+    $("fc-publish").classList.toggle("fc-hidden", !currentUser);
+
+    await loadPosts();
   }
 
   $("fc-signup").onclick = async () => {
     const email = $("fc-email").value.trim();
     const password = $("fc-password").value;
     const name = $("fc-name").value.trim();
-    if (!email || password.length < 6) return msg("أدخل البريد وكلمة مرور من 6 أحرف على الأقل.");
+
+    if (!email || password.length < 6)
+      return msg("أدخل البريد وكلمة مرور من 6 أحرف على الأقل.");
+
     const { error } = await db.auth.signUp({
       email, password, options: { data: { full_name: name } }
     });
+
     msg(error ? error.message : "تم إنشاء الحساب. تحقق من بريدك الإلكتروني إذا طُلب منك ذلك.");
   };
 
@@ -125,15 +129,21 @@ await loadPosts();
       email: $("fc-email").value.trim(),
       password: $("fc-password").value
     });
+
     msg(error ? error.message : "تم تسجيل الدخول.");
     if (!error) await refreshUser();
   };
 
   $("fc-send-code").onclick = async () => {
     const phone = $("fc-phone").value.trim();
-    if (!phone) return msg("أدخل رقم الهاتف مع رمز الدولة، مثال: +2126XXXXXXXX");
+
+    if (!phone)
+      return msg("أدخل رقم الهاتف مع رمز الدولة، مثال: +2126XXXXXXXX");
+
     const { error } = await db.auth.signInWithOtp({ phone });
+
     if (error) return msg(error.message);
+
     phonePending = true;
     $("fc-phone-verify").classList.remove("fc-hidden");
     msg("تم إرسال الرمز إذا كان مزود الرسائل مفعلاً في Supabase.");
@@ -141,11 +151,13 @@ await loadPosts();
 
   $("fc-verify-code").onclick = async () => {
     if (!phonePending) return;
+
     const { error } = await db.auth.verifyOtp({
       phone: $("fc-phone").value.trim(),
       token: $("fc-code").value.trim(),
       type: "sms"
     });
+
     msg(error ? error.message : "تم التحقق من الهاتف.");
     if (!error) await refreshUser();
   };
@@ -158,20 +170,37 @@ await loadPosts();
 
   $("fc-publish-btn").onclick = async () => {
     if (!currentUser) return msg("سجل الدخول أولاً.");
+
     const content = $("fc-content").value.trim();
     const file = $("fc-image").files[0];
-    if (!content && !file) return msg("اكتب نص المنشور أو أضف صورة.");
+
+    if (!content && !file)
+      return msg("اكتب نص المنشور أو أضف صورة.");
 
     let image_url = null;
+
     if (file) {
-      if (!file.type.startsWith("image/")) return msg("المرجو اختيار صورة فقط.");
-      if (file.size > 5 * 1024 * 1024) return msg("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
-      const ext = (file.name.split(".").pop() || "jpg").replace(/[^a-zA-Z0-9]/g, "");
+      if (!file.type.startsWith("image/"))
+        return msg("المرجو اختيار صورة فقط.");
+
+      if (file.size > 5 * 1024 * 1024)
+        return msg("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
+
+      const ext = (file.name.split(".").pop() || "jpg")
+        .replace(/[^a-zA-Z0-9]/g, "");
+
       const path = `${currentUser.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await db.storage.from("fellahi-images")
+
+      const { error: uploadError } = await db.storage
+        .from("fellahi-images")
         .upload(path, file, { upsert: false });
-      if (uploadError) return msg("تعذر رفع الصورة: " + uploadError.message);
-      const { data: publicData } = db.storage.from("fellahi-images").getPublicUrl(path);
+
+      if (uploadError)
+        return msg("تعذر رفع الصورة: " + uploadError.message);
+
+      const { data: publicData } = db.storage
+        .from("fellahi-images").getPublicUrl(path);
+
       image_url = publicData.publicUrl;
     }
 
@@ -180,22 +209,30 @@ await loadPosts();
       content: content || "صورة فلاحية",
       image_url
     });
-    if (error) return msg("تعذر نشر المنشور: " + error.message);
+
+    if (error)
+      return msg("تعذر نشر المنشور: " + error.message);
+
     $("fc-content").value = "";
     $("fc-image").value = "";
     msg("تم نشر منشورك بنجاح 🌱");
+
     await loadPosts();
   };
 
   async function loadPosts() {
     const feed = $("fc-feed");
+
     const { data: posts, error } = await db.from("posts")
-      .select("*").order("created_at", { ascending: false }).limit(100);
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) {
       feed.innerHTML = `<div class="fc-box">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
       return;
     }
+
     if (!posts?.length) {
       feed.innerHTML = '<div class="fc-box">لا توجد منشورات بعد. كن أول من يشارك! 🌱</div>';
       return;
@@ -203,13 +240,18 @@ await loadPosts();
 
     const userIds = [...new Set(posts.map(p => p.user_id))];
     const postIds = posts.map(p => p.id);
-    const [{ data: profiles }, { data: likes }, { data: comments }] = await Promise.all([
-      db.from("profiles").select("id,full_name").in("id", userIds),
-      db.from("likes").select("post_id,user_id").in("post_id", postIds),
-      db.from("comments").select("*").in("post_id", postIds).order("created_at")
-    ]);
 
-    const names = Object.fromEntries((profiles || []).map(p => [p.id, p.full_name || "فلاح"]));
+    const [{ data: profiles }, { data: likes }, { data: comments }] =
+      await Promise.all([
+        db.from("profiles").select("id,full_name").in("id", userIds),
+        db.from("likes").select("post_id,user_id").in("post_id", postIds),
+        db.from("comments").select("*").in("post_id", postIds).order("created_at")
+      ]);
+
+    const names = Object.fromEntries(
+      (profiles || []).map(p => [p.id, p.full_name || "فلاح"])
+    );
+
     feed.innerHTML = posts.map(post => {
       const postLikes = (likes || []).filter(l => l.post_id === post.id);
       const liked = postLikes.some(l => l.user_id === currentUser?.id);
@@ -244,12 +286,22 @@ await loadPosts();
 
     feed.querySelectorAll("[data-like]").forEach(btn => btn.onclick = async () => {
       if (!currentUser) return msg("سجل الدخول أولاً.");
+
       const post_id = btn.dataset.like;
-      const { data: existing } = await db.from("likes").select("post_id")
-        .eq("post_id", post_id).eq("user_id", currentUser.id).maybeSingle();
+
+      const { data: existing } = await db.from("likes")
+        .select("post_id")
+        .eq("post_id", post_id)
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
       const result = existing
-        ? await db.from("likes").delete().eq("post_id", post_id).eq("user_id", currentUser.id)
-        : await db.from("likes").insert({ post_id, user_id: currentUser.id });
+        ? await db.from("likes").delete()
+            .eq("post_id", post_id).eq("user_id", currentUser.id)
+        : await db.from("likes").insert({
+            post_id, user_id: currentUser.id
+          });
+
       if (result.error) msg(result.error.message);
       await loadPosts();
     });
@@ -257,29 +309,39 @@ await loadPosts();
     feed.querySelectorAll("[data-comment]").forEach(btn => btn.onclick = async () => {
       const post_id = btn.dataset.comment;
       const content = $(`fc-comment-${post_id}`).value.trim();
+
       if (!content) return;
+
       const { error } = await db.from("comments").insert({
         post_id, user_id: currentUser.id, content
       });
+
       if (error) msg(error.message);
       await loadPosts();
     });
 
     feed.querySelectorAll("[data-delete]").forEach(btn => btn.onclick = async () => {
       if (!confirm("واش متأكد من حذف المنشور؟")) return;
-      const { error } = await db.from("posts").delete().eq("id", btn.dataset.delete);
+
+      const { error } = await db.from("posts")
+        .delete().eq("id", btn.dataset.delete);
+
       if (error) msg(error.message);
       await loadPosts();
     });
 
     feed.querySelectorAll("[data-delete-comment]").forEach(btn => btn.onclick = async () => {
       if (!confirm("حذف التعليق؟")) return;
-      const { error } = await db.from("comments").delete().eq("id", btn.dataset.deleteComment);
+
+      const { error } = await db.from("comments")
+        .delete().eq("id", btn.dataset.deleteComment);
+
       if (error) msg(error.message);
       await loadPosts();
     });
   }
-    // لوحة تحكم المدير
+
+  // لوحة تحكم المدير
   const adminButton = document.createElement("button");
   adminButton.className = "fc-btn";
   adminButton.textContent = "🛡️ لوحة تحكم المدير";
@@ -295,12 +357,14 @@ await loadPosts();
     <button class="fc-btn" id="fc-admin-refresh">تحديث</button>
   `;
 
-$("fc-user").parentElement.appendChild(adminButton);
+  $("fc-user").parentElement.appendChild(adminButton);
   $("fc-user").parentElement.appendChild(adminPanel);
 
   adminButton.onclick = async () => {
     if (!isAdmin) return;
+
     adminPanel.classList.toggle("fc-hidden");
+
     if (!adminPanel.classList.contains("fc-hidden")) {
       await loadAdminPanel();
     }
@@ -310,7 +374,8 @@ $("fc-user").parentElement.appendChild(adminButton);
     if (!isAdmin || !currentUser) return;
 
     const [users, posts, comments] = await Promise.all([
-      db.from("profiles").select("id,full_name,role,created_at,is_banned")
+      db.from("profiles")
+        .select("id,full_name,role,created_at,is_banned")
         .order("created_at", { ascending: false }).limit(200),
       db.from("posts").select("id", { count: "exact", head: true }),
       db.from("comments").select("id", { count: "exact", head: true })
@@ -330,57 +395,62 @@ $("fc-user").parentElement.appendChild(adminButton);
     `;
 
     $("fc-admin-users").innerHTML = users.data.map(user => `
-  <div class="fc-box">
-    <strong>${esc(user.full_name || "مستخدم")}</strong>
-    <p class="fc-muted">
-      الصلاحية: ${user.role === "admin" ? "مدير" : "مستخدم"}
-    </p>
-    <p class="fc-muted">
-      الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}
-    </p>
-    ${user.id !== currentUser.id && user.role !== "admin" ? `
-      <button class="fc-btn" data-ban="${esc(user.id)}">
-        ${user.is_banned ? "إلغاء الحظر" : "🚫 حظر المستخدم"}
-      </button>
-    ` : ""}
-  </div>
-`).join("");
+      <div class="fc-box">
+        <strong>${esc(user.full_name || "مستخدم")}</strong>
+        <p class="fc-muted">
+          الصلاحية: ${user.role === "admin" ? "مدير" : "مستخدم"}
+        </p>
+        <p class="fc-muted">
+          الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}
+        </p>
+        ${user.id !== currentUser.id && user.role !== "admin" ? `
+          <button class="fc-btn" data-ban="${esc(user.id)}">
+            ${user.is_banned ? "إلغاء الحظر" : "🚫 حظر المستخدم"}
+          </button>
+        ` : ""}
+      </div>
+    `).join("");
 
-$("fc-admin-users").querySelectorAll("[data-ban]").forEach(btn => {
-  btn.onclick = async () => {
-    if (!isAdmin) return;
-    const id = btn.dataset.ban;
-    const user = users.data.find(u => u.id === id);
-    if (!user) return;
+    $("fc-admin-users").querySelectorAll("[data-ban]").forEach(btn => {
+      btn.onclick = async () => {
+        if (!isAdmin) return;
 
-    const action = user.is_banned ? "إلغاء الحظر" : "حظر";
-    if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
+        const id = btn.dataset.ban;
+        const user = users.data.find(u => u.id === id);
 
-    const { error } = await db.from("profiles")
-      .update({ is_banned: !user.is_banned })
-      .eq("id", id);
+        if (!user) return;
 
-    if (error) {
-      alert("تعذر تنفيذ العملية: " + error.message);
-      return;
-    }
+        const action = user.is_banned ? "إلغاء الحظر" : "حظر";
 
-    alert("تمت العملية بنجاح");
-    await loadAdminPanel();
-  };
-});
+        if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
+
+        const { error } = await db.from("profiles")
+          .update({ is_banned: !user.is_banned })
+          .eq("id", id);
+
+        if (error) {
+          alert("تعذر تنفيذ العملية: " + error.message);
+          return;
+        }
+
+        alert("تمت العملية بنجاح");
+        await loadAdminPanel();
+      };
+    });
   }
 
   $("fc-admin-refresh").onclick = loadAdminPanel;
 
   const originalRefreshUser = refreshUser;
+
   refreshUser = async function() {
     await originalRefreshUser();
-    adminButton.style.display = "inline-block";
+    adminButton.style.display = isAdmin ? "inline-block" : "none";
   };
+
   db.auth.onAuthStateChange(() => {
     setTimeout(refreshUser, 0);
   });
 
- alert("ملف المجتمع يعمل");
-  refreshUser();})();
+  refreshUser();
+})();
