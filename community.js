@@ -1,4 +1,3 @@
-
 // مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
 (() => {
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
@@ -13,9 +12,11 @@
   const communitySection = document.getElementById("community");
   const root = document.getElementById("community-app") || communitySection;
 
-  if (!root) return;
+  if (!root) {
+    console.error("لم يتم العثور على community-app أو community");
+    return;
+  }
 
-  // إخفاء واجهة فلاحي القديمة مع الاحتفاظ بها للعودة إليها
   const hiddenElements = [];
   const oldBack = communitySection?.querySelector('.back[data-go="home"]');
 
@@ -34,12 +35,10 @@
   function enterCommunityMode() {
     if (!communitySection) return;
 
-    // إخفاء العناصر القديمة داخل قسم المجتمع ما عدا واجهتنا
     [...communitySection.children].forEach(el => {
       if (el !== root) hideElement(el);
     });
 
-    // إخفاء بقية واجهة التطبيق حتى مستوى body
     let current = communitySection;
 
     while (current.parentElement) {
@@ -68,7 +67,6 @@
       if (homeButton) homeButton.click();
     }
   }
-
 
   let currentUser = null;
   let isAdmin = false;
@@ -122,540 +120,234 @@
       }
 
       #community-app *{box-sizing:border-box}
-
       .fc-hidden{display:none!important}
 
       .fc-topbar{
-        position:sticky;
-        top:0;
-        z-index:20;
-        background:#fff;
+        position:sticky;top:0;z-index:20;background:#fff;
         border-bottom:1px solid var(--ig-border);
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
+        display:flex;align-items:center;justify-content:space-between;
         padding:12px 14px;
       }
 
-      .fc-brand{
-        font-size:19px;
-        font-weight:900;
-        color:#176b45;
-      }
-
-      .fc-top-actions{
-        display:flex;
-        gap:8px;
-        align-items:center;
-      }
+      .fc-brand{font-size:19px;font-weight:900;color:#176b45}
+      .fc-top-actions{display:flex;gap:8px;align-items:center}
 
       .fc-icon-btn{
-        border:0;
-        background:#f0f5f1;
-        border-radius:50%;
-        width:39px;
-        height:39px;
-        font-size:19px;
-        cursor:pointer;
+        border:0;background:#f0f5f1;border-radius:50%;
+        width:39px;height:39px;font-size:19px;cursor:pointer;
       }
 
       .fc-message{
-        margin:8px 12px;
-        color:#176b45;
-        font-size:12px;
-        min-height:0;
-        line-height:1.7;
+        margin:8px 12px;color:#176b45;font-size:12px;
+        min-height:0;line-height:1.7;
       }
 
       .fc-auth-card,.fc-box{
-        background:#fff;
-        border:1px solid var(--ig-border);
-        border-radius:15px;
-        padding:14px;
-        margin:12px 0;
+        background:#fff;border:1px solid var(--ig-border);
+        border-radius:15px;padding:14px;margin:12px 0;
       }
 
       .fc-auth-card h3{margin:4px 0 8px}
 
       .fc-input{
-        width:100%;
-        box-sizing:border-box;
-        padding:12px;
-        border:1px solid #dfe8e1;
-        border-radius:10px;
-        margin:6px 0;
-        font:inherit;
-        background:#fff;
+        width:100%;box-sizing:border-box;padding:12px;
+        border:1px solid #dfe8e1;border-radius:10px;
+        margin:6px 0;font:inherit;background:#fff;
       }
 
       .fc-btn{
-        border:0;
-        border-radius:10px;
-        padding:10px 15px;
-        background:#176b45;
-        color:white;
-        font:inherit;
-        cursor:pointer;
-        font-weight:700;
+        border:0;border-radius:10px;padding:10px 15px;
+        background:#176b45;color:white;font:inherit;
+        cursor:pointer;font-weight:700;
       }
 
       .fc-btn:disabled{opacity:.6;cursor:wait}
       .fc-light{background:#edf5ef;color:#176b45}
 
-      .fc-muted{
-        color:var(--ig-muted);
-        font-size:12px;
-        line-height:1.7;
-      }
-
-      .fc-actions{
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
-        margin-top:10px;
-      }
-
-      .fc-auth-actions{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-      }
-
+      .fc-muted{color:var(--ig-muted);font-size:12px;line-height:1.7}
+      .fc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+      .fc-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
       .fc-auth-actions .fc-btn{width:100%}
 
       .fc-avatar{
-        width:43px;
-        height:43px;
-        border-radius:50%;
-        object-fit:cover;
-        border:2px solid #d7eadc;
-        flex-shrink:0;
+        width:43px;height:43px;border-radius:50%;
+        object-fit:cover;border:2px solid #d7eadc;flex-shrink:0;
       }
 
       .fc-avatar-placeholder{
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background:#e9f4ec;
-        font-size:23px;
+        display:flex;align-items:center;justify-content:center;
+        background:#e9f4ec;font-size:23px;
       }
 
       .fc-stories{
-        display:flex;
-        gap:14px;
-        overflow-x:auto;
-        padding:13px 12px;
-        background:#fff;
-        border-bottom:1px solid var(--ig-border);
+        display:flex;gap:14px;overflow-x:auto;padding:13px 12px;
+        background:#fff;border-bottom:1px solid var(--ig-border);
       }
 
       .fc-story{
-        flex:0 0 65px;
-        text-align:center;
-        cursor:pointer;
-        font-size:11px;
-        color:#526258;
+        flex:0 0 65px;text-align:center;cursor:pointer;
+        font-size:11px;color:#526258;
       }
 
       .fc-story-ring{
-        width:61px;
-        height:61px;
-        border-radius:50%;
-        padding:3px;
+        width:61px;height:61px;border-radius:50%;padding:3px;
         margin:0 auto 5px;
         background:linear-gradient(45deg,#f5a623,#d64b6b,#176b45);
       }
 
       .fc-story-ring>div{
-        width:100%;
-        height:100%;
-        border:2px solid white;
-        border-radius:50%;
-        overflow:hidden;
-        background:#eaf5ee;
-        display:grid;
-        place-items:center;
+        width:100%;height:100%;border:2px solid white;
+        border-radius:50%;overflow:hidden;background:#eaf5ee;
+        display:grid;place-items:center;
       }
 
       .fc-story-ring span{font-size:25px}
 
       .fc-compose{
-        background:#fff;
-        padding:13px 12px;
+        background:#fff;padding:13px 12px;
         border-bottom:1px solid var(--ig-border);
       }
 
-      .fc-compose-top{
-        display:flex;
-        align-items:center;
-        gap:10px;
-      }
+      .fc-compose-top{display:flex;align-items:center;gap:10px}
 
       .fc-compose-prompt{
-        flex:1;
-        border:1px solid #e5ece7;
-        border-radius:22px;
-        padding:11px 14px;
-        color:#849087;
-        font-size:13px;
-        background:#f8faf8;
-        cursor:pointer;
-        text-align:right;
+        flex:1;border:1px solid #e5ece7;border-radius:22px;
+        padding:11px 14px;color:#849087;font-size:13px;
+        background:#f8faf8;cursor:pointer;text-align:right;
       }
 
-      .fc-compose-extra{
-        display:flex;
-        gap:9px;
-        margin-top:11px;
-      }
+      .fc-compose-extra{display:flex;gap:9px;margin-top:11px}
 
       .fc-compose-extra button{
-        flex:1;
-        border:0;
-        background:#f0f6f1;
-        color:#176b45;
-        border-radius:9px;
-        padding:9px;
-        font:inherit;
-        font-size:12px;
+        flex:1;border:0;background:#f0f6f1;color:#176b45;
+        border-radius:9px;padding:9px;font:inherit;font-size:12px;
       }
 
       .fc-post{
-        background:#fff;
-        border-bottom:8px solid #f1f5f2;
-        padding:13px 12px;
-        margin:0;
+        background:#fff;border-bottom:8px solid #f1f5f2;
+        padding:13px 12px;margin:0;
       }
 
       .fc-post-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:8px;
-        margin-bottom:10px;
+        display:flex;align-items:center;justify-content:space-between;
+        gap:8px;margin-bottom:10px;
       }
 
-      .fc-author{
-        display:flex;
-        align-items:center;
-        gap:9px;
-        cursor:pointer;
-        min-width:0;
-      }
-
+      .fc-author{display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0}
       .fc-author-info{min-width:0}
-      .fc-author-info strong{
-        display:block;
-        font-size:13px;
-        color:#1c392a;
-      }
-
+      .fc-author-info strong{display:block;font-size:13px;color:#1c392a}
       .fc-author-info .fc-muted{font-size:10px}
-
-      .fc-post-menu{
-        border:0;
-        background:transparent;
-        font-size:22px;
-        color:#758078;
-      }
+      .fc-post-menu{border:0;background:transparent;font-size:22px;color:#758078}
 
       .fc-post-text{
-        font-size:14px;
-        line-height:1.8;
-        white-space:pre-wrap;
-        overflow-wrap:anywhere;
-        margin:8px 0 11px;
+        font-size:14px;line-height:1.8;white-space:pre-wrap;
+        overflow-wrap:anywhere;margin:8px 0 11px;
       }
 
       .fc-post-image{
-        width:calc(100% + 24px);
-        margin:0 -12px;
-        max-height:520px;
-        object-fit:cover;
-        display:block;
-        background:#f0f3f0;
+        width:calc(100% + 24px);margin:0 -12px;
+        max-height:520px;object-fit:cover;display:block;background:#f0f3f0;
       }
 
-      .fc-post-actions{
-        display:flex;
-        align-items:center;
-        gap:17px;
-        padding:10px 0 3px;
-      }
-
+      .fc-post-actions{display:flex;align-items:center;gap:17px;padding:10px 0 3px}
       .fc-action{
-        border:0;
-        background:none;
-        padding:3px 0;
-        color:#263c2f;
-        font:inherit;
-        font-size:14px;
-        cursor:pointer;
+        border:0;background:none;padding:3px 0;color:#263c2f;
+        font:inherit;font-size:14px;cursor:pointer;
       }
 
       .fc-action.liked{color:#e34252}
-      .fc-likes-count{
-        font-size:12px;
-        font-weight:800;
-        margin-top:5px;
-      }
-
-      .fc-comment-preview{
-        font-size:12px;
-        color:#58665d;
-        margin-top:5px;
-      }
-
-      .fc-comments{
-        background:#f8faf8;
-        border-radius:11px;
-        padding:10px;
-        margin-top:10px;
-      }
-
-      .fc-comment-row{
-        font-size:12px;
-        line-height:1.7;
-        padding:5px 0;
-        overflow-wrap:anywhere;
-      }
-
+      .fc-likes-count{font-size:12px;font-weight:800;margin-top:5px}
+      .fc-comment-preview{font-size:12px;color:#58665d;margin-top:5px}
+      .fc-comments{background:#f8faf8;border-radius:11px;padding:10px;margin-top:10px}
+      .fc-comment-row{font-size:12px;line-height:1.7;padding:5px 0;overflow-wrap:anywhere}
       .fc-comment-row b{color:#176b45}
-      .fc-comment-form{
-        display:flex;
-        gap:6px;
-        margin-top:8px;
-      }
-
-      .fc-comment-form input{
-        flex:1;
-        min-width:0;
-        margin:0;
-      }
-
+      .fc-comment-form{display:flex;gap:6px;margin-top:8px}
+      .fc-comment-form input{flex:1;min-width:0;margin:0}
       .fc-comment-form button{white-space:nowrap}
 
       .fc-bottom-nav{
-        position:fixed;
-        bottom:0;
-        left:0;
-        right:0;
-        z-index:30;
-        background:#fff;
-        border-top:1px solid var(--ig-border);
-        display:grid;
-        grid-template-columns:repeat(4,1fr);
+        position:fixed;bottom:0;left:0;right:0;z-index:30;
+        background:#fff;border-top:1px solid var(--ig-border);
+        display:grid;grid-template-columns:repeat(4,1fr);
         padding:8px 3px calc(8px + env(safe-area-inset-bottom));
       }
 
       .fc-bottom-nav button{
-        border:0;
-        background:none;
-        color:#68766d;
-        font-size:10px;
-        padding:3px;
-        cursor:pointer;
+        border:0;background:none;color:#68766d;font-size:10px;
+        padding:3px;cursor:pointer;
       }
 
-      .fc-bottom-nav button span{
-        display:block;
-        font-size:21px;
-        margin-bottom:2px;
-      }
-
-      .fc-bottom-nav button.active{
-        color:#176b45;
-        font-weight:900;
-      }
+      .fc-bottom-nav button span{display:block;font-size:21px;margin-bottom:2px}
+      .fc-bottom-nav button.active{color:#176b45;font-weight:900}
 
       .fc-profile-head{
-        background:#fff;
-        border-bottom:1px solid var(--ig-border);
+        background:#fff;border-bottom:1px solid var(--ig-border);
         padding:15px 13px;
       }
 
-      .fc-profile-top{
-        display:flex;
-        align-items:center;
-        gap:18px;
-      }
+      .fc-profile-top{display:flex;align-items:center;gap:18px}
 
       .fc-profile-avatar{
-        width:88px;
-        height:88px;
-        border-radius:50%;
-        object-fit:cover;
-        border:3px solid #e3efe6;
+        width:88px;height:88px;border-radius:50%;
+        object-fit:cover;border:3px solid #e3efe6;
       }
 
       .fc-profile-stats{
-        display:flex;
-        justify-content:space-around;
-        flex:1;
-        text-align:center;
+        display:flex;justify-content:space-around;flex:1;text-align:center;
       }
 
-      .fc-profile-stats strong{
-        display:block;
-        font-size:18px;
-      }
+      .fc-profile-stats strong{display:block;font-size:18px}
+      .fc-profile-stats span{font-size:11px;color:#7a877e}
+      .fc-profile-name{font-size:16px;font-weight:900;margin:12px 0 3px}
+      .fc-profile-bio{font-size:13px;line-height:1.8;white-space:pre-wrap}
 
-      .fc-profile-stats span{
-        font-size:11px;
-        color:#7a877e;
-      }
-
-      .fc-profile-name{
-        font-size:16px;
-        font-weight:900;
-        margin:12px 0 3px;
-      }
-
-      .fc-profile-bio{
-        font-size:13px;
-        line-height:1.8;
-        white-space:pre-wrap;
-      }
-
-      .fc-profile-grid{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:2px;
-        margin-top:3px;
-      }
-
-      .fc-grid-item{
-        aspect-ratio:1/1;
-        background:#edf2ee;
-        overflow:hidden;
-        position:relative;
-        cursor:pointer;
-      }
-
-      .fc-grid-item img{
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
+      .fc-profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:3px}
+      .fc-grid-item{aspect-ratio:1/1;background:#edf2ee;overflow:hidden;position:relative;cursor:pointer}
+      .fc-grid-item img{width:100%;height:100%;object-fit:cover}
 
       .fc-grid-text{
-        font-size:10px;
-        padding:7px;
-        line-height:1.5;
-        overflow:hidden;
-        max-height:100%;
+        font-size:10px;padding:7px;line-height:1.5;
+        overflow:hidden;max-height:100%;
       }
 
       .fc-grid-count{
-        position:absolute;
-        bottom:5px;
-        left:5px;
-        color:white;
-        background:#0009;
-        padding:3px 6px;
-        border-radius:8px;
-        font-size:10px;
+        position:absolute;bottom:5px;left:5px;color:white;
+        background:#0009;padding:3px 6px;border-radius:8px;font-size:10px;
       }
 
       .fc-profile-tabs{
-        display:flex;
-        justify-content:center;
-        padding:13px;
+        display:flex;justify-content:center;padding:13px;
         border-bottom:1px solid var(--ig-border);
-        color:#176b45;
-        font-weight:900;
-        font-size:13px;
+        color:#176b45;font-weight:900;font-size:13px;
       }
 
       .fc-profile-edit{
-        width:100%;
-        margin-top:12px;
-        background:#edf5ef;
-        color:#176b45;
-        border:0;
-        border-radius:9px;
-        padding:9px;
-        font:inherit;
-        font-weight:800;
+        width:100%;margin-top:12px;background:#edf5ef;color:#176b45;
+        border:0;border-radius:9px;padding:9px;font:inherit;font-weight:800;
       }
 
       .fc-profile-panel{
-        background:#fff;
-        border:1px solid var(--ig-border);
-        border-radius:14px;
-        padding:14px;
-        margin:12px 0;
+        background:#fff;border:1px solid var(--ig-border);
+        border-radius:14px;padding:14px;margin:12px 0;
       }
 
       .fc-photo-preview{
-        width:100px;
-        height:100px;
-        border-radius:50%;
-        object-fit:cover;
-        display:block;
-        margin:10px auto;
+        width:100px;height:100px;border-radius:50%;
+        object-fit:cover;display:block;margin:10px auto;
         border:3px solid #176b45;
       }
 
-      .fc-label{
-        display:block;
-        font-size:12px;
-        font-weight:800;
-        margin-top:10px;
-      }
-
-      .fc-empty{
-        text-align:center;
-        padding:35px 15px;
-        color:#7b887f;
-        background:#fff;
-        font-size:13px;
-        line-height:2;
-      }
-
-      .fc-detail-image{
-        width:100%;
-        max-height:500px;
-        object-fit:contain;
-        background:#f0f3f0;
-        border-radius:10px;
-      }
-
+      .fc-label{display:block;font-size:12px;font-weight:800;margin-top:10px}
+      .fc-empty{text-align:center;padding:35px 15px;color:#7b887f;background:#fff;font-size:13px;line-height:2}
+      .fc-detail-image{width:100%;max-height:500px;object-fit:contain;background:#f0f3f0;border-radius:10px}
       .fc-admin{padding:12px;background:#fff}
 
       @media(min-width:620px){
-        #community-app{
-          max-width:650px;
-          margin:0 auto;
-          border-left:1px solid #e8eee9;
-          border-right:1px solid #e8eee9;
-        }
-
-        .fc-post{
-          border:1px solid var(--ig-border);
-          border-radius:14px;
-          margin:12px 0;
-        }
-
-        .fc-post-image{
-          width:100%;
-          margin:0;
-          max-height:520px;
-          border-radius:9px;
-        }
-
-        .fc-compose{
-          border:1px solid var(--ig-border);
-          border-radius:14px;
-          margin:12px 0;
-        }
-
-        .fc-bottom-nav{
-          left:50%;
-          right:auto;
-          transform:translateX(-50%);
-          width:min(650px,100%);
-        }
+        #community-app{max-width:650px;margin:0 auto;border-left:1px solid #e8eee9;border-right:1px solid #e8eee9}
+        .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
+        .fc-post-image{width:100%;margin:0;max-height:520px;border-radius:9px}
+        .fc-compose{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
+        .fc-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(650px,100%)}
       }
     </style>
 
@@ -664,7 +356,6 @@
         <button class="fc-icon-btn" id="fc-back-app" title="العودة إلى فلاحي">←</button>
         <div class="fc-brand">🌱 المجتمع الفلاحي</div>
       </div>
-
       <div class="fc-top-actions">
         <button class="fc-icon-btn" id="fc-search-toggle" title="بحث">⌕</button>
         <button class="fc-icon-btn" id="fc-profile-shortcut" title="ملفي">👤</button>
@@ -680,7 +371,6 @@
     <div id="fc-auth" class="fc-auth-card">
       <h3>🌱 مرحباً بك في المجتمع الفلاحي</h3>
       <p class="fc-muted">تواصل مع الفلاحين، شارك تجاربك وتعلم من الآخرين.</p>
-
       <input id="fc-email" class="fc-input" type="email" placeholder="البريد الإلكتروني">
       <input id="fc-password" class="fc-input" type="password" placeholder="كلمة المرور">
       <input id="fc-name" class="fc-input" placeholder="الاسم عند إنشاء الحساب">
@@ -691,7 +381,6 @@
       </div>
 
       <hr style="border:0;border-top:1px solid #e8eee9;margin:15px 0">
-
       <p class="fc-muted">أو الدخول برقم الهاتف</p>
       <input id="fc-phone" class="fc-input" type="tel" placeholder="+2126XXXXXXXX">
       <button class="fc-btn fc-light" id="fc-send-code">إرسال رمز الهاتف</button>
@@ -708,31 +397,16 @@
           <div class="fc-story-ring"><div><span>＋</span></div></div>
           حسابي
         </div>
-
-        <div class="fc-story">
-          <div class="fc-story-ring"><div><span>🌱</span></div></div>
-          المحاصيل
-        </div>
-
-        <div class="fc-story">
-          <div class="fc-story-ring"><div><span>🚜</span></div></div>
-          المعدات
-        </div>
-
-        <div class="fc-story">
-          <div class="fc-story-ring"><div><span>💧</span></div></div>
-          السقي
-        </div>
+        <div class="fc-story"><div class="fc-story-ring"><div><span>🌱</span></div></div>المحاصيل</div>
+        <div class="fc-story"><div class="fc-story-ring"><div><span>🚜</span></div></div>المعدات</div>
+        <div class="fc-story"><div class="fc-story-ring"><div><span>💧</span></div></div>السقي</div>
       </div>
 
       <div class="fc-compose">
         <div class="fc-compose-top">
           <div id="fc-compose-avatar"></div>
-          <button class="fc-compose-prompt" id="fc-compose-open">
-            شارك شيئاً مع الفلاحين...
-          </button>
+          <button class="fc-compose-prompt" id="fc-compose-open">شارك شيئاً مع الفلاحين...</button>
         </div>
-
         <div class="fc-compose-extra">
           <button id="fc-add-photo">📷 إضافة صورة</button>
           <button id="fc-compose-text">✍️ كتابة منشور</button>
@@ -741,15 +415,10 @@
 
       <div id="fc-publish" class="fc-profile-panel fc-hidden">
         <h3 style="margin-top:0">✍️ منشور جديد</h3>
-
-        <textarea id="fc-content" class="fc-input" rows="4"
-          maxlength="5000" placeholder="شنو بغيتي تشارك مع الفلاحين؟"></textarea>
-
+        <textarea id="fc-content" class="fc-input" rows="4" maxlength="5000" placeholder="شنو بغيتي تشارك مع الفلاحين؟"></textarea>
         <label class="fc-label">إضافة صورة</label>
         <input id="fc-image" class="fc-input" type="file" accept="image/*">
-
         <div id="fc-image-preview"></div>
-
         <div class="fc-actions">
           <button class="fc-btn" id="fc-publish-btn">نشر الآن</button>
           <button class="fc-btn fc-light" id="fc-publish-close">إلغاء</button>
@@ -764,11 +433,9 @@
 
     <div id="fc-profile-panel" class="fc-profile-panel fc-hidden">
       <h3 style="margin-top:0;color:#176b45">تعديل حسابك</h3>
-
       <label class="fc-label">الصورة الشخصية</label>
       <img id="fc-avatar-preview" class="fc-photo-preview"
         src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer" alt="الصورة الشخصية">
-
       <input id="fc-avatar-file" class="fc-input" type="file" accept="image/*">
 
       <label class="fc-label">الاسم الكامل</label>
@@ -778,12 +445,10 @@
       <input id="fc-profile-city" class="fc-input" placeholder="مثلاً: القنيطرة">
 
       <label class="fc-label">نبذة عنك</label>
-      <textarea id="fc-profile-bio" class="fc-input" rows="3"
-        maxlength="1000" placeholder="عرفنا على نشاطك الفلاحي..."></textarea>
+      <textarea id="fc-profile-bio" class="fc-input" rows="3" maxlength="1000" placeholder="عرفنا على نشاطك الفلاحي..."></textarea>
 
       <label class="fc-label">المحاصيل والأشجار التي تهتم بها</label>
-      <input id="fc-profile-crops" class="fc-input"
-        placeholder="الأفوكادو، الزيتون، الحوامض...">
+      <input id="fc-profile-crops" class="fc-input" placeholder="الأفوكادو، الزيتون، الحوامض...">
 
       <div class="fc-actions">
         <button class="fc-btn" id="fc-profile-save">حفظ التغييرات</button>
@@ -801,10 +466,11 @@
     </div>
   `;
 
-  // زر الرجوع إلى تطبيق فلاحي
+  // مهم: تشغيل وضع المجتمع وإخفاء واجهة التطبيق القديمة
+  enterCommunityMode();
+
   $("fc-back-app").onclick = leaveCommunityMode;
 
-  // التنقل داخل المجتمع
   function setTab(tab) {
     document.querySelectorAll("#fc-bottom-nav button").forEach(b => {
       b.classList.toggle("active", b.dataset.tab === tab);
@@ -831,7 +497,6 @@
 
     if (tab === "create") {
       if (!currentUser) return msg("سجل الدخول أولاً باش تنشر.");
-
       $("fc-user").classList.remove("fc-hidden");
       $("fc-publish").classList.remove("fc-hidden");
       $("fc-search-box").classList.add("fc-hidden");
@@ -893,22 +558,50 @@
 
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
-    img.style.cssText =
-      "width:100%;max-height:230px;object-fit:contain;border-radius:10px;margin-top:8px";
-
+    img.style.cssText = "width:100%;max-height:230px;object-fit:contain;border-radius:10px;margin-top:8px";
     $("fc-image-preview").append(img);
   };
 
-  // تحميل المستخدم
+  // تحميل المستخدم وإنشاء ملفه الشخصي عند الحاجة
   async function refreshUser() {
     const {data,error} = await db.auth.getUser();
     currentUser = error ? null : data.user || null;
     isAdmin = false;
 
     if (currentUser) {
-      const {data:profile} = await db.from("profiles")
+      let {data:profile,error:profileError} = await db.from("profiles")
         .select("id,full_name,role,is_banned,city,bio,crops,avatar_url")
-        .eq("id",currentUser.id).maybeSingle();
+        .eq("id",currentUser.id)
+        .maybeSingle();
+
+      // إنشاء سجل الملف الشخصي إذا لم يكن موجوداً
+      if (!profile && !profileError) {
+        const fallbackName =
+          currentUser.user_metadata?.full_name ||
+          currentUser.email?.split("@")[0] ||
+          "فلاح";
+
+        const {error:insertError} = await db.from("profiles").upsert({
+          id:currentUser.id,
+          full_name:fallbackName
+        },{onConflict:"id",ignoreDuplicates:true});
+
+        if (!insertError) {
+          const result = await db.from("profiles")
+            .select("id,full_name,role,is_banned,city,bio,crops,avatar_url")
+            .eq("id",currentUser.id)
+            .maybeSingle();
+
+          profile = result.data;
+          profileError = result.error;
+        } else {
+          console.warn("تعذر إنشاء الملف الشخصي:",insertError.message);
+        }
+      }
+
+      if (profileError) {
+        msg("تعذر تحميل الملف الشخصي: " + profileError.message);
+      }
 
       if (profile?.is_banned) {
         await db.auth.signOut();
@@ -918,7 +611,7 @@
         isAdmin = profile?.role === "admin";
         profilesCache[currentUser.id] = profile || {};
 
-        $("fc-profile-name").value = profile?.full_name || "";
+        $("fc-profile-name").value = profile?.full_name || currentUser.user_metadata?.full_name || "";
         $("fc-profile-city").value = profile?.city || "";
         $("fc-profile-bio").value = profile?.bio || "";
 
@@ -983,16 +676,21 @@
       }
 
       const {data:saved,error} = await db.from("profiles")
-        .update({full_name,city,bio,crops,avatar_url})
-        .eq("id",currentUser.id).select().maybeSingle();
+        .upsert({
+          id:currentUser.id,
+          full_name,
+          city,
+          bio,
+          crops,
+          avatar_url
+        },{onConflict:"id"})
+        .select()
+        .single();
 
       if (error) throw error;
 
-      if (!saved) {
-        throw new Error("لم يتم تحديث الحساب. تحقق من صلاحيات profiles.");
-      }
-
       profilesCache[currentUser.id] = saved;
+
       await db.auth.updateUser({data:{full_name}});
 
       $("fc-avatar-file").value = "";
@@ -1038,28 +736,50 @@
       return msg("أدخل البريد وكلمة مرور من 6 أحرف على الأقل.");
     }
 
-    const {error} = await db.auth.signUp({
-      email,
-      password,
-      options:{data:{full_name:name}}
-    });
+    const button = $("fc-signup");
+    button.disabled = true;
 
-    msg(error ? error.message :
-      "تم إنشاء الحساب. تحقق من بريدك الإلكتروني إذا طُلب منك ذلك.");
+    try {
+      const {data,error} = await db.auth.signUp({
+        email,
+        password,
+        options:{data:{full_name:name}}
+      });
+
+      if (error) throw error;
+
+      if (data.user && data.session) {
+        await refreshUser();
+        msg("تم إنشاء حسابك بنجاح 🌱");
+      } else {
+        msg("تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتفعيل الحساب إذا طُلب منك ذلك.");
+      }
+    } catch (e) {
+      msg("تعذر إنشاء الحساب: " + e.message);
+    } finally {
+      button.disabled = false;
+    }
   };
 
   // تسجيل الدخول
   $("fc-login").onclick = async () => {
-    const {error} = await db.auth.signInWithPassword({
-      email:$("fc-email").value.trim(),
-      password:$("fc-password").value
-    });
+    const button = $("fc-login");
+    button.disabled = true;
 
-    if (error) {
-      msg(error.message);
-    } else {
-      msg("");
+    try {
+      const {error} = await db.auth.signInWithPassword({
+        email:$("fc-email").value.trim(),
+        password:$("fc-password").value
+      });
+
+      if (error) throw error;
+
+      msg("تم تسجيل الدخول بنجاح.");
       await refreshUser();
+    } catch (e) {
+      msg("تعذر تسجيل الدخول: " + e.message);
+    } finally {
+      button.disabled = false;
     }
   };
 
@@ -1102,9 +822,7 @@
     const content = $("fc-content").value.trim();
     const file = $("fc-image").files[0];
 
-    if (!content && !file) {
-      return msg("اكتب شيئاً أو أضف صورة.");
-    }
+    if (!content && !file) return msg("اكتب شيئاً أو أضف صورة.");
 
     const button = $("fc-publish-btn");
     button.disabled = true;
@@ -1162,9 +880,13 @@
     const missing = ids.filter(id => !profilesCache[id]);
 
     if (missing.length) {
-      const {data} = await db.from("profiles")
+      const {data,error} = await db.from("profiles")
         .select("id,full_name,city,bio,crops,avatar_url,role")
         .in("id",missing);
+
+      if (error) {
+        console.warn("تعذر تحميل بعض الحسابات:",error.message);
+      }
 
       (data || []).forEach(p => profilesCache[p.id] = p);
     }
@@ -1189,8 +911,7 @@
       .eq("id",userId).maybeSingle();
 
     if (error || !profile) {
-      panel.innerHTML =
-        '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
+      panel.innerHTML = '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
       return;
     }
 
@@ -1230,7 +951,6 @@
         </div>
 
         <div class="fc-profile-name">${esc(profile.full_name || "فلاح")}</div>
-
         ${profile.city ? `<div class="fc-muted">📍 ${esc(profile.city)}</div>` : ""}
         ${profile.bio ? `<div class="fc-profile-bio">${esc(profile.bio)}</div>` : ""}
         ${crops.length ? `<div class="fc-muted" style="margin-top:7px">🌱 يهتم بـ: ${esc(crops.join("، "))}</div>` : ""}
@@ -1277,10 +997,7 @@
 
     $("fc-user").classList.add("fc-hidden");
 
-    window.scrollTo({
-      top:root.offsetTop,
-      behavior:"smooth"
-    });
+    window.scrollTo({top:root.offsetTop,behavior:"smooth"});
   }
 
   // تفاصيل المنشور
@@ -1301,24 +1018,16 @@
         </div>
 
         <p class="fc-post-text">${esc(post.content || "")}</p>
-
         ${post.image_url ? `<img class="fc-detail-image" src="${esc(post.image_url)}" alt="صورة المنشور">` : ""}
-
         <p class="fc-muted">${new Date(post.created_at).toLocaleString("ar")}</p>
         <button class="fc-btn fc-light" id="fc-detail-close">إغلاق المنشور</button>
       </div>
     `;
 
-    $("fc-detail-close").onclick = () =>
-      detail.classList.add("fc-hidden");
+    $("fc-detail-close").onclick = () => detail.classList.add("fc-hidden");
+    $("fc-detail-author").onclick = () => openProfile(profile.id);
 
-    $("fc-detail-author").onclick = () =>
-      openProfile(profile.id);
-
-    window.scrollTo({
-      top:detail.offsetTop,
-      behavior:"smooth"
-    });
+    window.scrollTo({top:detail.offsetTop,behavior:"smooth"});
   }
 
   // رسم المنشورات
@@ -1336,8 +1045,7 @@
     });
 
     if (!visiblePosts.length) {
-      feed.innerHTML =
-        '<div class="fc-empty">لا توجد منشورات مطابقة للبحث.</div>';
+      feed.innerHTML = '<div class="fc-empty">لا توجد منشورات مطابقة للبحث.</div>';
       return;
     }
 
@@ -1363,9 +1071,7 @@
               </div>
             </div>
 
-            ${canDelete
-              ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>`
-              : ""}
+            ${canDelete ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>` : ""}
           </div>
 
           ${post.content ? `<div class="fc-post-text">${esc(post.content)}</div>` : ""}
@@ -1375,11 +1081,7 @@
             <button class="fc-action ${liked ? "liked" : ""}" data-like="${esc(post.id)}">
               ${liked ? "❤️" : "🤍"} إعجاب
             </button>
-
-            <button class="fc-action" data-toggle-comments="${esc(post.id)}">
-              💬 تعليق
-            </button>
-
+            <button class="fc-action" data-toggle-comments="${esc(post.id)}">💬 تعليق</button>
             <button class="fc-action" data-share="${esc(post.id)}">↗ مشاركة</button>
           </div>
 
@@ -1398,7 +1100,6 @@
               <div class="fc-comment-row">
                 <b>${esc(profilesCache[c.user_id]?.full_name || "فلاح")}</b>
                 ${esc(c.content)}
-
                 ${(c.user_id === currentUser?.id || isAdmin)
                   ? `<button class="fc-action" data-delete-comment="${esc(c.id)}">حذف</button>`
                   : ""}
@@ -1416,16 +1117,13 @@
       `;
     }).join("");
 
-    // فتح حساب صاحب المنشور
     feed.querySelectorAll("[data-profile]").forEach(el => {
       el.onclick = () => openProfile(el.dataset.profile);
     });
 
-    // إظهار التعليقات
     feed.querySelectorAll("[data-toggle-comments]").forEach(btn => {
       btn.onclick = () => {
-        $(`fc-comments-${btn.dataset.toggleComments}`)
-          .classList.toggle("fc-hidden");
+        $(`fc-comments-${btn.dataset.toggleComments}`).classList.toggle("fc-hidden");
       };
     });
 
@@ -1507,10 +1205,7 @@
     // مشاركة المنشور
     feed.querySelectorAll("[data-share]").forEach(btn => {
       btn.onclick = async () => {
-        const post = allPosts.find(
-          p => String(p.id) === btn.dataset.share
-        );
-
+        const post = allPosts.find(p => String(p.id) === btn.dataset.share);
         if (!post) return;
 
         const shareText =
@@ -1538,8 +1233,7 @@
     const feed = $("fc-feed");
     if (!feed) return;
 
-    feed.innerHTML =
-      '<div class="fc-empty">جاري تحميل المنشورات...</div>';
+    feed.innerHTML = '<div class="fc-empty">جاري تحميل المنشورات...</div>';
 
     const {data:posts,error} = await db.from("posts")
       .select("*")
@@ -1547,8 +1241,7 @@
       .limit(100);
 
     if (error) {
-      feed.innerHTML =
-        `<div class="fc-empty">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
+      feed.innerHTML = `<div class="fc-empty">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
       return;
     }
 
@@ -1557,10 +1250,7 @@
     if (!allPosts.length) {
       allLikes = [];
       allComments = [];
-
-      feed.innerHTML =
-        '<div class="fc-empty">🌱<br>مازال ما كاين حتى منشور.<br>كون أول واحد يشارك تجربتو!</div>';
-
+      feed.innerHTML = '<div class="fc-empty">🌱<br>مازال ما كاين حتى منشور.<br>كون أول واحد يشارك تجربتو!</div>';
       return;
     }
 
@@ -1570,24 +1260,16 @@
     await getProfiles(userIds);
 
     const [likesResult,commentsResult] = await Promise.all([
-      db.from("likes")
-        .select("post_id,user_id")
-        .in("post_id",postIds),
-
-      db.from("comments")
-        .select("*")
-        .in("post_id",postIds)
-        .order("created_at")
+      db.from("likes").select("post_id,user_id").in("post_id",postIds),
+      db.from("comments").select("*").in("post_id",postIds).order("created_at")
     ]);
 
     allLikes = likesResult.data || [];
     allComments = commentsResult.data || [];
 
-    const commentUserIds = [
-      ...new Set(allComments.map(c => c.user_id))
-    ];
-
+    const commentUserIds = [...new Set(allComments.map(c => c.user_id))];
     await getProfiles(commentUserIds);
+
     renderFeed();
   }
 
@@ -1600,8 +1282,7 @@
       btn.id = "fc-admin-button";
       btn.className = "fc-btn fc-light";
       btn.textContent = "🛡️ الإدارة";
-      btn.style.cssText =
-        "display:block;margin:10px 12px;width:calc(100% - 24px)";
+      btn.style.cssText = "display:block;margin:10px 12px;width:calc(100% - 24px)";
 
       $("fc-user").appendChild(btn);
 
@@ -1610,7 +1291,6 @@
 
       btn.onclick = async () => {
         area.classList.toggle("fc-hidden");
-
         if (!area.classList.contains("fc-hidden")) {
           await loadAdminPanel();
         }
@@ -1644,21 +1324,16 @@
 
     area.innerHTML = `
       <h3>🛡️ لوحة تحكم المدير</h3>
-
       <div class="fc-box">👥 المستخدمون: ${users.data.length}</div>
       <div class="fc-box">📝 المنشورات: ${posts.count || 0}</div>
       <div class="fc-box">💬 التعليقات: ${comments.count || 0}</div>
-
       <h4>المستخدمون</h4>
 
       <div id="fc-admin-users">
         ${users.data.map(user => `
           <div class="fc-box">
             <b>${esc(user.full_name || "مستخدم")}</b>
-
-            <p class="fc-muted">
-              الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}
-            </p>
+            <p class="fc-muted">الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}</p>
 
             ${user.id !== currentUser.id && user.role !== "admin" ? `
               <button class="fc-btn fc-light" data-ban="${esc(user.id)}">
@@ -1674,14 +1349,10 @@
 
     area.querySelectorAll("[data-ban]").forEach(btn => {
       btn.onclick = async () => {
-        const user = users.data.find(
-          u => u.id === btn.dataset.ban
-        );
-
+        const user = users.data.find(u => u.id === btn.dataset.ban);
         if (!user) return;
 
         const action = user.is_banned ? "إلغاء الحظر" : "حظر";
-
         if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
 
         const {error} = await db.from("profiles")
@@ -1707,5 +1378,9 @@
   });
 
   // تشغيل المجتمع
-  refreshUser();
+  refreshUser().catch(error => {
+    console.error("Community startup error:",error);
+    msg("وقع مشكل أثناء تشغيل المجتمع: " + (error.message || error));
+  });
+
 })();
