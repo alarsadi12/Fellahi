@@ -18,6 +18,16 @@ button{background:#176b45;color:white;border:0;border-radius:9px;padding:12px;wi
 .price{color:#176b45;font-weight:bold}
 small{color:#718078}
 a{color:inherit}
+.interaction{margin-top:15px;padding:12px;background:#f4f8f5;border-radius:12px}
+.like-btn{background:#fff0f0;color:#b42318;border:1px solid #f0cccc;margin-bottom:12px}
+.like-btn.liked{background:#b42318;color:white}
+.comment{background:white;border:1px solid #e5e9e6;border-radius:9px;padding:10px;margin:8px 0}
+.comment p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.comment small{font-size:11px}
+.comment-delete{width:auto;padding:5px 10px;background:#b42318;font-size:12px;margin-top:5px}
+.comment-box{margin-top:12px}
+.comment-box textarea{min-height:65px}
+.comment-box button{margin-top:4px}
 </style>
 </head>
 <body>
@@ -83,6 +93,8 @@ const $ = id => document.getElementById(id);
 
 let user = null;
 let allAds = [];
+let allComments = [];
+let allLikes = [];
 let editingAdId = null;
 
 function message(t) {
@@ -112,6 +124,32 @@ async function loadAds() {
   }
 
   allAds = data || [];
+
+  if (allAds.length) {
+    const [commentsResult, likesResult] = await Promise.all([
+      db.from("market_comments")
+        .select("id,ad_id,user_id,content,created_at")
+        .in("ad_id", allAds.map(a => a.id))
+        .order("created_at", { ascending: true }),
+
+      db.from("market_likes")
+        .select("id,ad_id,user_id")
+        .in("ad_id", allAds.map(a => a.id))
+    ]);
+
+    allComments = commentsResult.data || [];
+    allLikes = likesResult.data || [];
+
+    if (commentsResult.error) {
+      message("تعذر تحميل التعليقات: " + commentsResult.error.message);
+    } else if (likesResult.error) {
+      message("تعذر تحميل الإعجابات: " + likesResult.error.message);
+    }
+  } else {
+    allComments = [];
+    allLikes = [];
+  }
+
   renderAds();
 }
 
@@ -140,6 +178,39 @@ function renderAds() {
         '<button data-delete="' + esc(a.id) + '" style="margin-top:8px;background:#b42318">🗑️ حذف الإعلان</button>'
       : "";
 
+    const adComments = allComments.filter(c => c.ad_id === a.id);
+    const adLikes = allLikes.filter(l => l.ad_id === a.id);
+    const liked = user && adLikes.some(l => l.user_id === user.id);
+
+    const likeButton = user
+      ? '<button class="like-btn ' + (liked ? 'liked' : '') +
+        '" data-like="' + esc(a.id) + '">' +
+        (liked ? '❤️ أعجبني' : '🤍 إعجاب') +
+        ' · ' + adLikes.length + '</button>'
+      : '<button class="like-btn" data-like="' + esc(a.id) + '">' +
+        '❤️ إعجاب · ' + adLikes.length + '</button>';
+
+    const commentsHtml = adComments.length
+      ? adComments.map(c =>
+          '<div class="comment">' +
+          '<small>👤 مستخدم · ' +
+          esc(c.created_at ? new Date(c.created_at).toLocaleString("ar-MA") : "") +
+          '</small>' +
+          '<p>' + esc(c.content) + '</p>' +
+          (user && c.user_id === user.id
+            ? '<button class="comment-delete" data-comment-delete="' + esc(c.id) + '">حذف تعليقي</button>'
+            : '') +
+          '</div>'
+        ).join("")
+      : '<p><small>لا توجد تعليقات بعد. كن أول من يعلق!</small></p>';
+
+    const commentForm = user
+      ? '<div class="comment-box">' +
+        '<textarea data-comment-input="' + esc(a.id) + '" placeholder="اكتب تعليقك هنا..."></textarea>' +
+        '<button data-comment-submit="' + esc(a.id) + '">💬 إرسال التعليق</button>' +
+        '</div>'
+      : '<p><small>سجل الدخول من المجتمع الفلاحي باش تقدر تعلق وتعجب بالإعلان.</small></p>';
+
     return '<div class="ad">' +
       (a.image_url
         ? '<img src="' + esc(a.image_url) + '" alt="' + esc(a.title) + '" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px">'
@@ -150,6 +221,14 @@ function renderAds() {
       '<div class="price">' +
       (a.price !== null ? esc(a.price) + " درهم" : "الثمن عند التواصل") +
       '</div>' + phone + ownerButtons +
+
+      '<div class="interaction">' +
+      likeButton +
+      '<h4>💬 التعليقات (' + adComments.length + ')</h4>' +
+      commentsHtml +
+      commentForm +
+      '</div>' +
+
       '</div>';
   }).join("");
 }
@@ -294,9 +373,128 @@ $("publish").onclick = async function() {
 };
 
 $("ads").onclick = async function(e) {
+  const likeButton = e.target.closest("[data-like]");
+  const commentButton = e.target.closest("[data-comment-submit]");
+  const commentDeleteButton = e.target.closest("[data-comment-delete]");
   const editButton = e.target.closest("[data-edit]");
   const deleteButton = e.target.closest("[data-delete]");
 
+  // الإعجاب
+  if (likeButton) {
+    if (!user) {
+      message("سجل الدخول من المجتمع الفلاحي باش تدير إعجاب.");
+      return;
+    }
+
+    const adId = likeButton.getAttribute("data-like");
+
+    const existingLike = allLikes.find(
+      l => l.ad_id === adId && l.user_id === user.id
+    );
+
+    likeButton.disabled = true;
+
+    if (existingLike) {
+      const { error } = await db
+        .from("market_likes")
+        .delete()
+        .eq("ad_id", adId)
+        .eq("user_id", user.id);
+
+      if (error) {
+        message("تعذر إزالة الإعجاب: " + error.message);
+        likeButton.disabled = false;
+        return;
+      }
+    } else {
+      const { error } = await db
+        .from("market_likes")
+        .insert({
+          ad_id: adId,
+          user_id: user.id
+        });
+
+      if (error) {
+        message("تعذر إضافة الإعجاب: " + error.message);
+        likeButton.disabled = false;
+        return;
+      }
+    }
+
+    await loadAds();
+    return;
+  }
+
+  // إضافة تعليق
+  if (commentButton) {
+    if (!user) {
+      message("سجل الدخول أولاً باش تقدر تعلق.");
+      return;
+    }
+
+    const adId = commentButton.getAttribute("data-comment-submit");
+    const commentBox = commentButton.closest(".comment-box");
+    const textarea = commentBox.querySelector("textarea");
+    const content = textarea.value.trim();
+
+    if (!content) {
+      message("كتب التعليق ديالك أولاً.");
+      return;
+    }
+
+    if (content.length > 2000) {
+      message("التعليق طويل بزاف. اختصره شوية.");
+      return;
+    }
+
+    commentButton.disabled = true;
+    commentButton.textContent = "جاري إرسال التعليق...";
+
+    const { error } = await db
+      .from("market_comments")
+      .insert({
+        ad_id: adId,
+        user_id: user.id,
+        content: content
+      });
+
+    if (error) {
+      message("تعذر إرسال التعليق: " + error.message);
+      commentButton.disabled = false;
+      commentButton.textContent = "💬 إرسال التعليق";
+      return;
+    }
+
+    message("تم إرسال تعليقك بنجاح.");
+    await loadAds();
+    return;
+  }
+
+  // حذف تعليق
+  if (commentDeleteButton) {
+    if (!user) return;
+
+    const commentId = commentDeleteButton.getAttribute("data-comment-delete");
+
+    if (!confirm("واش متأكد أنك باغي تحذف تعليقك؟")) return;
+
+    const { error } = await db
+      .from("market_comments")
+      .delete()
+      .eq("id", commentId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      message("تعذر حذف التعليق: " + error.message);
+      return;
+    }
+
+    message("تم حذف التعليق.");
+    await loadAds();
+    return;
+  }
+
+  // تعديل الإعلان
   if (editButton) {
     const editId = editButton.getAttribute("data-edit");
 
@@ -325,6 +523,7 @@ $("ads").onclick = async function(e) {
     return;
   }
 
+  // حذف الإعلان
   if (deleteButton) {
     if (!user) {
       message("سجل الدخول أولاً.");
