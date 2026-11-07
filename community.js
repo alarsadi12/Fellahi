@@ -1,13 +1,73 @@
 
-// مجتمع فلاحي 2.0 — واجهة اجتماعية مستوحاة من Instagram
+// مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
 (() => {
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
 
+  if (!window.supabase) {
+    alert("تعذر تحميل Supabase. تحقق من اتصال الإنترنت.");
+    return;
+  }
+
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const communitySection = document.getElementById("community");
   const root = document.getElementById("community-app") ||
-               document.getElementById("community");
+               communitySection;
+
   if (!root) return;
+
+  // إخفاء واجهة فلاحي القديمة مع الاحتفاظ بها للعودة إليها
+  const hiddenElements = [];
+  const oldBack = communitySection?.querySelector(
+    '.back[data-go="home"]'
+  );
+
+  function hideElement(el) {
+    if (!el || ["SCRIPT", "STYLE"].includes(el.tagName)) return;
+    if (hiddenElements.some(item => item.el === el)) return;
+
+    hiddenElements.push({
+      el,
+      display: el.style.display
+    });
+
+    el.style.display = "none";
+  }
+
+  function enterCommunityMode() {
+    if (!communitySection) return;
+
+    // إخفاء العنوان وزر الرجوع القديم داخل قسم المجتمع
+    [...communitySection.children].forEach(el => {
+      if (el !== root) hideElement(el);
+    });
+
+    // إخفاء بقية واجهة التطبيق خارج قسم المجتمع
+    let current = communitySection;
+
+    while (current.parentElement &&
+           current.parentElement !== document.body) {
+      const parent = current.parentElement;
+
+      [...parent.children].forEach(el => {
+        if (el !== current) hideElement(el);
+      });
+
+      current = parent;
+    }
+  }
+
+  function leaveCommunityMode() {
+    hiddenElements.forEach(item => {
+      item.el.style.display = item.display;
+    });
+
+    hiddenElements.length = 0;
+
+    if (oldBack) oldBack.click();
+  }
+
+  enterCommunityMode();
 
   let currentUser = null;
   let isAdmin = false;
@@ -21,18 +81,25 @@
   const $ = id => document.getElementById(id);
 
   const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   })[c]);
 
   const avatar = (url, name = "فلاح", size = "") => {
-    const style = size ? `style="width:${size};height:${size}"` : "";
+    const style = size
+      ? `style="width:${size};height:${size}"`
+      : "";
+
     return url
       ? `<img class="fc-avatar" ${style} src="${esc(url)}" alt="${esc(name)}">`
       : `<div class="fc-avatar fc-avatar-placeholder" ${style}>👨‍🌾</div>`;
   };
 
   const msg = text => {
-    $("fc-message").textContent = text;
+    if ($("fc-message")) $("fc-message").textContent = text || "";
   };
 
   root.innerHTML = `
@@ -40,153 +107,183 @@
       #community-app,#community{
         direction:rtl;text-align:right;font-family:inherit;color:#183329;
       }
+
       #community-app{
         --ig-green:#176b45;
-        --ig-bg:#f7faf8;
         --ig-border:#e8eee9;
         --ig-muted:#87938b;
         padding-bottom:75px;
+        background:#f7faf8;
+        min-height:100vh;
       }
+
       .fc-hidden{display:none!important}
+
       .fc-topbar{
         position:sticky;top:0;z-index:5;background:#fff;
         border-bottom:1px solid var(--ig-border);
         display:flex;align-items:center;justify-content:space-between;
         padding:12px 14px;
       }
-      .fc-brand{font-size:21px;font-weight:900;color:#176b45}
+
+      .fc-brand{font-size:19px;font-weight:900;color:#176b45}
       .fc-top-actions{display:flex;gap:8px;align-items:center}
+
       .fc-icon-btn{
         border:0;background:#f0f5f1;border-radius:50%;
         width:39px;height:39px;font-size:19px;cursor:pointer;
       }
+
       .fc-message{
-        margin:8px 12px;color:#176b45;font-size:12px;min-height:18px;
+        margin:8px 12px;color:#176b45;font-size:12px;
+        min-height:0;line-height:1.7;
       }
+
       .fc-auth-card,.fc-box{
         background:#fff;border:1px solid var(--ig-border);
         border-radius:15px;padding:14px;margin:12px 0;
       }
+
       .fc-auth-card h3{margin:4px 0 8px}
+
       .fc-input{
         width:100%;box-sizing:border-box;padding:12px;
         border:1px solid #dfe8e1;border-radius:10px;
         margin:6px 0;font:inherit;background:#fff;
       }
+
       .fc-btn{
         border:0;border-radius:10px;padding:10px 15px;
         background:#176b45;color:white;font:inherit;
         cursor:pointer;font-weight:700;
       }
+
       .fc-btn:disabled{opacity:.6;cursor:wait}
       .fc-light{background:#edf5ef;color:#176b45}
       .fc-muted{color:var(--ig-muted);font-size:12px;line-height:1.7}
       .fc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-      .fc-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      .fc-auth-actions .fc-btn{width:100%}
-      .fc-section-title{
-        display:flex;align-items:center;justify-content:space-between;
-        gap:8px;margin:17px 2px 10px;
+
+      .fc-auth-actions{
+        display:grid;grid-template-columns:1fr 1fr;gap:8px;
       }
-      .fc-section-title h3{font-size:16px;margin:0}
+
+      .fc-auth-actions .fc-btn{width:100%}
+
       .fc-avatar{
         width:43px;height:43px;border-radius:50%;
         object-fit:cover;border:2px solid #d7eadc;flex-shrink:0;
       }
+
       .fc-avatar-placeholder{
         display:flex;align-items:center;justify-content:center;
         background:#e9f4ec;font-size:23px;
       }
+
       .fc-stories{
         display:flex;gap:14px;overflow-x:auto;padding:13px 12px;
         background:#fff;border-bottom:1px solid var(--ig-border);
       }
+
       .fc-story{
         flex:0 0 65px;text-align:center;cursor:pointer;
         font-size:11px;color:#526258;
       }
+
       .fc-story-ring{
         width:61px;height:61px;border-radius:50%;padding:3px;
         margin:0 auto 5px;
         background:linear-gradient(45deg,#f5a623,#d64b6b,#176b45);
       }
+
       .fc-story-ring>div{
         width:100%;height:100%;border:2px solid white;
         border-radius:50%;overflow:hidden;background:#eaf5ee;
         display:grid;place-items:center;
       }
-      .fc-story-ring img{width:100%;height:100%;object-fit:cover}
+
       .fc-story-ring span{font-size:25px}
+
       .fc-compose{
         background:#fff;padding:13px 12px;
         border-bottom:1px solid var(--ig-border);
       }
+
       .fc-compose-top{display:flex;align-items:center;gap:10px}
+
       .fc-compose-prompt{
         flex:1;border:1px solid #e5ece7;border-radius:22px;
         padding:11px 14px;color:#849087;font-size:13px;
-        background:#f8faf8;cursor:pointer;
+        background:#f8faf8;cursor:pointer;text-align:right;
       }
-      .fc-compose-extra{
-        display:flex;gap:9px;margin-top:11px;
-      }
+
+      .fc-compose-extra{display:flex;gap:9px;margin-top:11px}
+
       .fc-compose-extra button{
         flex:1;border:0;background:#f0f6f1;color:#176b45;
         border-radius:9px;padding:9px;font:inherit;font-size:12px;
       }
+
       .fc-post{
         background:#fff;border-bottom:8px solid #f1f5f2;
         padding:13px 12px;margin:0;
       }
+
       .fc-post-head{
         display:flex;align-items:center;justify-content:space-between;
         gap:8px;margin-bottom:10px;
       }
+
       .fc-author{
         display:flex;align-items:center;gap:9px;cursor:pointer;
         min-width:0;
       }
+
       .fc-author-info{min-width:0}
-      .fc-author-info strong{
-        display:block;font-size:13px;color:#1c392a;
-      }
+      .fc-author-info strong{display:block;font-size:13px;color:#1c392a}
       .fc-author-info .fc-muted{font-size:10px}
+
       .fc-post-menu{
         border:0;background:transparent;font-size:22px;color:#758078;
       }
+
       .fc-post-text{
         font-size:14px;line-height:1.8;white-space:pre-wrap;
         overflow-wrap:anywhere;margin:8px 0 11px;
       }
+
       .fc-post-image{
         width:calc(100% + 24px);margin:0 -12px;
         max-height:520px;object-fit:cover;display:block;
         background:#f0f3f0;
       }
+
       .fc-post-actions{
         display:flex;align-items:center;gap:17px;padding:10px 0 3px;
       }
+
       .fc-action{
         border:0;background:none;padding:3px 0;
         color:#263c2f;font:inherit;font-size:14px;cursor:pointer;
       }
+
       .fc-action.liked{color:#e34252}
       .fc-likes-count{font-size:12px;font-weight:800;margin-top:5px}
-      .fc-comment-preview{
-        font-size:12px;color:#58665d;margin-top:5px;
-      }
+      .fc-comment-preview{font-size:12px;color:#58665d;margin-top:5px}
+
       .fc-comments{
-        background:#f8faf8;border-radius:11px;padding:10px;
-        margin-top:10px;
+        background:#f8faf8;border-radius:11px;padding:10px;margin-top:10px;
       }
+
       .fc-comment-row{
         font-size:12px;line-height:1.7;padding:5px 0;
         overflow-wrap:anywhere;
       }
+
       .fc-comment-row b{color:#176b45}
       .fc-comment-form{display:flex;gap:6px;margin-top:8px}
       .fc-comment-form input{flex:1;min-width:0;margin:0}
       .fc-comment-form button{white-space:nowrap}
+
       .fc-bottom-nav{
         position:sticky;bottom:0;z-index:4;background:#fff;
         border-top:1px solid var(--ig-border);
@@ -194,86 +291,119 @@
         padding:8px 3px calc(8px + env(safe-area-inset-bottom));
         margin-top:12px;
       }
+
       .fc-bottom-nav button{
         border:0;background:none;color:#68766d;
         font-size:10px;padding:3px;cursor:pointer;
       }
-      .fc-bottom-nav button span{display:block;font-size:21px;margin-bottom:2px}
+
+      .fc-bottom-nav button span{
+        display:block;font-size:21px;margin-bottom:2px;
+      }
+
       .fc-bottom-nav button.active{color:#176b45;font-weight:900}
+
       .fc-profile-head{
         background:#fff;border-bottom:1px solid var(--ig-border);
         padding:15px 13px;
       }
-      .fc-profile-top{
-        display:flex;align-items:center;gap:18px;
-      }
+
+      .fc-profile-top{display:flex;align-items:center;gap:18px}
+
       .fc-profile-avatar{
         width:88px;height:88px;border-radius:50%;
         object-fit:cover;border:3px solid #e3efe6;
       }
+
       .fc-profile-stats{
         display:flex;justify-content:space-around;flex:1;text-align:center;
       }
+
       .fc-profile-stats strong{display:block;font-size:18px}
       .fc-profile-stats span{font-size:11px;color:#7a877e}
       .fc-profile-name{font-size:16px;font-weight:900;margin:12px 0 3px}
       .fc-profile-bio{font-size:13px;line-height:1.8;white-space:pre-wrap}
+
       .fc-profile-grid{
         display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
         margin-top:3px;
       }
+
       .fc-grid-item{
         aspect-ratio:1/1;background:#edf2ee;overflow:hidden;
         position:relative;cursor:pointer;
       }
+
       .fc-grid-item img{width:100%;height:100%;object-fit:cover}
+
       .fc-grid-text{
         font-size:10px;padding:7px;line-height:1.5;
         overflow:hidden;max-height:100%;
       }
+
       .fc-grid-count{
         position:absolute;bottom:5px;left:5px;
         color:white;background:#0009;padding:3px 6px;
         border-radius:8px;font-size:10px;
       }
+
       .fc-profile-tabs{
         display:flex;justify-content:center;padding:13px;
         border-bottom:1px solid var(--ig-border);
         color:#176b45;font-weight:900;font-size:13px;
       }
+
       .fc-profile-edit{
         width:100%;margin-top:12px;background:#edf5ef;
         color:#176b45;border:0;border-radius:9px;padding:9px;
         font:inherit;font-weight:800;
       }
+
       .fc-profile-panel{
         background:#fff;border:1px solid var(--ig-border);
         border-radius:14px;padding:14px;margin:12px 0;
       }
+
       .fc-photo-preview{
         width:100px;height:100px;border-radius:50%;
         object-fit:cover;display:block;margin:10px auto;
         border:3px solid #176b45;
       }
+
       .fc-label{display:block;font-size:12px;font-weight:800;margin-top:10px}
+
       .fc-empty{
         text-align:center;padding:35px 15px;color:#7b887f;
         background:#fff;font-size:13px;line-height:2;
       }
+
       .fc-detail-image{
         width:100%;max-height:500px;object-fit:contain;
         background:#f0f3f0;border-radius:10px;
       }
+
       .fc-admin{padding:12px;background:#fff}
+
       @media(min-width:620px){
-        .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
-        .fc-post-image{width:100%;margin:0;max-height:520px;border-radius:9px}
-        .fc-compose{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
+        .fc-post{
+          border:1px solid var(--ig-border);
+          border-radius:14px;margin:12px 0;
+        }
+        .fc-post-image{
+          width:100%;margin:0;max-height:520px;border-radius:9px;
+        }
+        .fc-compose{
+          border:1px solid var(--ig-border);
+          border-radius:14px;margin:12px 0;
+        }
       }
     </style>
 
     <div class="fc-topbar">
-      <div class="fc-brand">🌱 فلاحي</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="fc-icon-btn" id="fc-back-app" title="العودة إلى فلاحي">←</button>
+        <div class="fc-brand">🌱 المجتمع الفلاحي</div>
+      </div>
       <div class="fc-top-actions">
         <button class="fc-icon-btn" id="fc-search-toggle" title="بحث">⌕</button>
         <button class="fc-icon-btn" id="fc-profile-shortcut" title="ملفي">👤</button>
@@ -292,14 +422,17 @@
       <input id="fc-email" class="fc-input" type="email" placeholder="البريد الإلكتروني">
       <input id="fc-password" class="fc-input" type="password" placeholder="كلمة المرور">
       <input id="fc-name" class="fc-input" placeholder="الاسم عند إنشاء الحساب">
+
       <div class="fc-auth-actions">
         <button class="fc-btn" id="fc-signup">إنشاء حساب</button>
         <button class="fc-btn fc-light" id="fc-login">دخول</button>
       </div>
+
       <hr style="border:0;border-top:1px solid #e8eee9;margin:15px 0">
       <p class="fc-muted">أو الدخول برقم الهاتف</p>
       <input id="fc-phone" class="fc-input" type="tel" placeholder="+2126XXXXXXXX">
       <button class="fc-btn fc-light" id="fc-send-code">إرسال رمز الهاتف</button>
+
       <div id="fc-phone-verify" class="fc-hidden">
         <input id="fc-code" class="fc-input" placeholder="رمز التحقق">
         <button class="fc-btn" id="fc-verify-code">تأكيد الرمز</button>
@@ -310,7 +443,7 @@
       <div class="fc-stories">
         <div class="fc-story" id="fc-my-story">
           <div class="fc-story-ring"><div><span>＋</span></div></div>
-          قصتي / حسابي
+          حسابي
         </div>
         <div class="fc-story">
           <div class="fc-story-ring"><div><span>🌱</span></div></div>
@@ -364,16 +497,21 @@
       <img id="fc-avatar-preview" class="fc-photo-preview"
         src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer" alt="الصورة الشخصية">
       <input id="fc-avatar-file" class="fc-input" type="file" accept="image/*">
+
       <label class="fc-label">الاسم الكامل</label>
       <input id="fc-profile-name" class="fc-input" placeholder="اسمك">
+
       <label class="fc-label">المدينة أو المنطقة</label>
       <input id="fc-profile-city" class="fc-input" placeholder="مثلاً: القنيطرة">
+
       <label class="fc-label">نبذة عنك</label>
       <textarea id="fc-profile-bio" class="fc-input" rows="3"
         maxlength="1000" placeholder="عرفنا على نشاطك الفلاحي..."></textarea>
+
       <label class="fc-label">المحاصيل والأشجار التي تهتم بها</label>
       <input id="fc-profile-crops" class="fc-input"
         placeholder="الأفوكادو، الزيتون، الحوامض...">
+
       <div class="fc-actions">
         <button class="fc-btn" id="fc-profile-save">حفظ التغييرات</button>
         <button class="fc-btn fc-light" id="fc-profile-close">إغلاق</button>
@@ -389,6 +527,9 @@
       <button data-tab="profile"><span>👤</span>حسابي</button>
     </div>
   `;
+
+  // زر الرجوع إلى تطبيق فلاحي
+  $("fc-back-app").onclick = leaveCommunityMode;
 
   // التنقل داخل المجتمع
   function setTab(tab) {
@@ -409,10 +550,10 @@
 
     if (tab === "search") {
       $("fc-search-box").classList.remove("fc-hidden");
-      $("fc-search").focus();
       $("fc-user").classList.toggle("fc-hidden", !currentUser);
       $("fc-feed").classList.remove("fc-hidden");
       $("fc-publish").classList.add("fc-hidden");
+      $("fc-search").focus();
     }
 
     if (tab === "create") {
@@ -440,10 +581,12 @@
   $("fc-my-story").onclick = () => setTab("profile");
   $("fc-compose-open").onclick = () => setTab("create");
   $("fc-compose-text").onclick = () => setTab("create");
+
   $("fc-add-photo").onclick = () => {
     setTab("create");
     $("fc-image").click();
   };
+
   $("fc-publish-close").onclick = () => {
     $("fc-publish").classList.add("fc-hidden");
     setTab("feed");
@@ -476,7 +619,9 @@
 
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
-    img.style.cssText = "width:100%;max-height:230px;object-fit:contain;border-radius:10px;margin-top:8px";
+    img.style.cssText =
+      "width:100%;max-height:230px;object-fit:contain;border-radius:10px;margin-top:8px";
+
     $("fc-image-preview").append(img);
   };
 
@@ -502,6 +647,7 @@
         $("fc-profile-name").value = profile?.full_name || "";
         $("fc-profile-city").value = profile?.city || "";
         $("fc-profile-bio").value = profile?.bio || "";
+
         $("fc-profile-crops").value =
           Array.isArray(profile?.crops) ? profile.crops.join("، ") : "";
 
@@ -532,6 +678,7 @@
     const full_name = $("fc-profile-name").value.trim();
     const city = $("fc-profile-city").value.trim();
     const bio = $("fc-profile-bio").value.trim();
+
     const crops = $("fc-profile-crops").value
       .split(/[،,]/).map(x => x.trim()).filter(Boolean);
 
@@ -548,6 +695,7 @@
       if (file) {
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
+
         const path = `${currentUser.id}/avatar-${Date.now()}.${ext}`;
 
         const {error:uploadError} = await db.storage
@@ -565,7 +713,9 @@
         .eq("id",currentUser.id).select().maybeSingle();
 
       if (error) throw error;
-      if (!saved) throw new Error("لم يتم تحديث الحساب. تحقق من صلاحيات profiles.");
+      if (!saved) {
+        throw new Error("لم يتم تحديث الحساب. تحقق من صلاحيات profiles.");
+      }
 
       profilesCache[currentUser.id] = saved;
       await db.auth.updateUser({data:{full_name}});
@@ -576,8 +726,12 @@
 
       $("fc-profile-panel").classList.add("fc-hidden");
       msg("تم تحديث حسابك بنجاح 🌱");
+
       await refreshUser();
-      if (activeProfileId === currentUser.id) await openProfile(currentUser.id);
+
+      if (activeProfileId === currentUser.id) {
+        await openProfile(currentUser.id);
+      }
     } catch (e) {
       msg("تعذر حفظ الحساب: " + e.message);
     } finally {
@@ -589,11 +743,14 @@
   $("fc-profile-close").onclick = () =>
     $("fc-profile-panel").classList.add("fc-hidden");
 
-  // فتح تعديل الملف الشخصي
   function editOwnProfile() {
     $("fc-public-profile").classList.add("fc-hidden");
     $("fc-profile-panel").classList.remove("fc-hidden");
-    window.scrollTo({top:$("fc-profile-panel").offsetTop,behavior:"smooth"});
+
+    window.scrollTo({
+      top:$("fc-profile-panel").offsetTop,
+      behavior:"smooth"
+    });
   }
 
   // إنشاء حساب
@@ -602,11 +759,14 @@
     const password = $("fc-password").value;
     const name = $("fc-name").value.trim();
 
-    if (!email || password.length < 6)
+    if (!email || password.length < 6) {
       return msg("أدخل البريد وكلمة مرور من 6 أحرف على الأقل.");
+    }
 
     const {error} = await db.auth.signUp({
-      email,password,options:{data:{full_name:name}}
+      email,
+      password,
+      options:{data:{full_name:name}}
     });
 
     msg(error ? error.message :
@@ -620,16 +780,22 @@
       password:$("fc-password").value
     });
 
-    msg(error ? error.message : "تم تسجيل الدخول بنجاح.");
-    if (!error) await refreshUser();
+    if (error) {
+      msg(error.message);
+    } else {
+      msg("");
+      await refreshUser();
+    }
   };
 
   // الدخول بالهاتف
   $("fc-send-code").onclick = async () => {
     const phone = $("fc-phone").value.trim();
+
     if (!phone) return msg("أدخل رقم الهاتف مع رمز الدولة.");
 
     const {error} = await db.auth.signInWithOtp({phone});
+
     if (error) return msg(error.message);
 
     phonePending = true;
@@ -639,14 +805,19 @@
 
   $("fc-verify-code").onclick = async () => {
     if (!phonePending) return;
+
     const {error} = await db.auth.verifyOtp({
       phone:$("fc-phone").value.trim(),
       token:$("fc-code").value.trim(),
       type:"sms"
     });
 
-    msg(error ? error.message : "تم التحقق من الهاتف.");
-    if (!error) await refreshUser();
+    if (error) {
+      msg(error.message);
+    } else {
+      msg("");
+      await refreshUser();
+    }
   };
 
   // نشر منشور
@@ -656,7 +827,9 @@
     const content = $("fc-content").value.trim();
     const file = $("fc-image").files[0];
 
-    if (!content && !file) return msg("اكتب شيئاً أو أضف صورة.");
+    if (!content && !file) {
+      return msg("اكتب شيئاً أو أضف صورة.");
+    }
 
     const button = $("fc-publish-btn");
     button.disabled = true;
@@ -666,11 +839,13 @@
       let image_url = null;
 
       if (file) {
-        if (!file.type.startsWith("image/") || file.size > 5*1024*1024)
+        if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
           throw new Error("الصورة يجب أن تكون أقل من 5 ميغابايت.");
+        }
 
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
+
         const path = `${currentUser.id}/${Date.now()}.${ext}`;
 
         const {error:uploadError} = await db.storage
@@ -694,9 +869,11 @@
       $("fc-image").value = "";
       $("fc-image-preview").innerHTML = "";
       $("fc-publish").classList.add("fc-hidden");
+
       msg("تم نشر منشورك بنجاح 🌱");
       await loadPosts();
       setTab("feed");
+
     } catch (e) {
       msg("تعذر النشر: " + e.message);
     } finally {
@@ -708,18 +885,22 @@
   // تحميل بيانات الحسابات
   async function getProfiles(ids) {
     const missing = ids.filter(id => !profilesCache[id]);
+
     if (missing.length) {
       const {data} = await db.from("profiles")
         .select("id,full_name,city,bio,crops,avatar_url,role")
         .in("id",missing);
+
       (data || []).forEach(p => profilesCache[p.id] = p);
     }
+
     return profilesCache;
   }
 
   // فتح الملف الشخصي العام
   async function openProfile(userId) {
     activeProfileId = userId;
+
     $("fc-profile-panel").classList.add("fc-hidden");
     $("fc-post-detail").classList.add("fc-hidden");
     $("fc-publish").classList.add("fc-hidden");
@@ -733,7 +914,8 @@
       .eq("id",userId).maybeSingle();
 
     if (error || !profile) {
-      panel.innerHTML = '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
+      panel.innerHTML =
+        '<div class="fc-empty">تعذر العثور على هذا الحساب.</div>';
       return;
     }
 
@@ -750,6 +932,7 @@
     if (postIds.length) {
       const result = await db.from("likes")
         .select("post_id,user_id").in("post_id",postIds);
+
       likes = result.data || [];
     }
 
@@ -763,6 +946,7 @@
           ${profile.avatar_url
             ? `<img class="fc-profile-avatar" src="${esc(profile.avatar_url)}" alt="الصورة الشخصية">`
             : `<div class="fc-avatar fc-avatar-placeholder" style="width:88px;height:88px;font-size:42px">👨‍🌾</div>`}
+
           <div class="fc-profile-stats">
             <div><strong>${userPosts.length}</strong><span>منشور</span></div>
             <div><strong>${totalLikes}</strong><span>إعجاب</span></div>
@@ -801,21 +985,29 @@
       $("fc-feed").classList.remove("fc-hidden");
     };
 
-    if ($("fc-edit-own-profile"))
+    if ($("fc-edit-own-profile")) {
       $("fc-edit-own-profile").onclick = editOwnProfile;
+    }
 
     panel.querySelectorAll("[data-open-profile-post]").forEach(item => {
       item.onclick = () => {
-        const post = userPosts.find(p => String(p.id) === item.dataset.openProfilePost);
+        const post = userPosts.find(
+          p => String(p.id) === item.dataset.openProfilePost
+        );
+
         if (post) openPostDetail(post,profile);
       };
     });
 
     $("fc-user").classList.add("fc-hidden");
-    window.scrollTo({top:root.offsetTop,behavior:"smooth"});
+
+    window.scrollTo({
+      top:root.offsetTop,
+      behavior:"smooth"
+    });
   }
 
-  // عرض تفاصيل المنشور
+  // تفاصيل المنشور
   function openPostDetail(post,profile) {
     const detail = $("fc-post-detail");
     detail.classList.remove("fc-hidden");
@@ -831,6 +1023,7 @@
             </div>
           </div>
         </div>
+
         <p class="fc-post-text">${esc(post.content || "")}</p>
         ${post.image_url ? `<img class="fc-detail-image" src="${esc(post.image_url)}" alt="صورة المنشور">` : ""}
         <p class="fc-muted">${new Date(post.created_at).toLocaleString("ar")}</p>
@@ -838,9 +1031,16 @@
       </div>
     `;
 
-    $("fc-detail-close").onclick = () => detail.classList.add("fc-hidden");
-    $("fc-detail-author").onclick = () => openProfile(profile.id);
-    window.scrollTo({top:detail.offsetTop,behavior:"smooth"});
+    $("fc-detail-close").onclick = () =>
+      detail.classList.add("fc-hidden");
+
+    $("fc-detail-author").onclick = () =>
+      openProfile(profile.id);
+
+    window.scrollTo({
+      top:detail.offsetTop,
+      behavior:"smooth"
+    });
   }
 
   // رسم المنشورات
@@ -850,6 +1050,7 @@
 
     const visiblePosts = allPosts.filter(post => {
       const author = profilesCache[post.user_id] || {};
+
       return !query ||
         String(post.content || "").toLowerCase().includes(query) ||
         String(author.full_name || "").toLowerCase().includes(query) ||
@@ -857,7 +1058,8 @@
     });
 
     if (!visiblePosts.length) {
-      feed.innerHTML = '<div class="fc-empty">لا توجد منشورات مطابقة للبحث.</div>';
+      feed.innerHTML =
+        '<div class="fc-empty">لا توجد منشورات مطابقة للبحث.</div>';
       return;
     }
 
@@ -882,7 +1084,10 @@
                 </span>
               </div>
             </div>
-            ${canDelete ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>` : ""}
+
+            ${canDelete
+              ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>`
+              : ""}
           </div>
 
           ${post.content ? `<div class="fc-post-text">${esc(post.content)}</div>` : ""}
@@ -938,7 +1143,8 @@
     // إظهار التعليقات
     feed.querySelectorAll("[data-toggle-comments]").forEach(btn => {
       btn.onclick = () => {
-        $(`fc-comments-${btn.dataset.toggleComments}`).classList.toggle("fc-hidden");
+        $(`fc-comments-${btn.dataset.toggleComments}`)
+          .classList.toggle("fc-hidden");
       };
     });
 
@@ -946,18 +1152,24 @@
     feed.querySelectorAll("[data-like]").forEach(btn => {
       btn.onclick = async () => {
         if (!currentUser) return msg("سجل الدخول أولاً.");
+
         const post_id = btn.dataset.like;
 
         const {data:existing,error:checkError} = await db.from("likes")
-          .select("post_id").eq("post_id",post_id)
-          .eq("user_id",currentUser.id).maybeSingle();
+          .select("post_id")
+          .eq("post_id",post_id)
+          .eq("user_id",currentUser.id)
+          .maybeSingle();
 
         if (checkError) return msg(checkError.message);
 
         const result = existing
           ? await db.from("likes").delete()
               .eq("post_id",post_id).eq("user_id",currentUser.id)
-          : await db.from("likes").insert({post_id,user_id:currentUser.id});
+          : await db.from("likes").insert({
+              post_id,
+              user_id:currentUser.id
+            });
 
         if (result.error) msg(result.error.message);
         await loadPosts();
@@ -968,12 +1180,16 @@
     feed.querySelectorAll("[data-comment]").forEach(btn => {
       btn.onclick = async () => {
         if (!currentUser) return msg("سجل الدخول أولاً.");
+
         const post_id = btn.dataset.comment;
         const content = $(`fc-comment-${post_id}`).value.trim();
+
         if (!content) return;
 
         const {error} = await db.from("comments").insert({
-          post_id,user_id:currentUser.id,content
+          post_id,
+          user_id:currentUser.id,
+          content
         });
 
         if (error) msg(error.message);
@@ -985,7 +1201,10 @@
     feed.querySelectorAll("[data-delete]").forEach(btn => {
       btn.onclick = async () => {
         if (!confirm("واش متأكد من حذف المنشور؟")) return;
-        const {error} = await db.from("posts").delete().eq("id",btn.dataset.delete);
+
+        const {error} = await db.from("posts")
+          .delete().eq("id",btn.dataset.delete);
+
         if (error) msg(error.message);
         await loadPosts();
       };
@@ -995,8 +1214,10 @@
     feed.querySelectorAll("[data-delete-comment]").forEach(btn => {
       btn.onclick = async () => {
         if (!confirm("حذف التعليق؟")) return;
+
         const {error} = await db.from("comments")
           .delete().eq("id",btn.dataset.deleteComment);
+
         if (error) msg(error.message);
         await loadPosts();
       };
@@ -1005,12 +1226,21 @@
     // مشاركة المنشور
     feed.querySelectorAll("[data-share]").forEach(btn => {
       btn.onclick = async () => {
-        const post = allPosts.find(p => String(p.id) === btn.dataset.share);
+        const post = allPosts.find(
+          p => String(p.id) === btn.dataset.share
+        );
+
         if (!post) return;
-        const shareText = `${profilesCache[post.user_id]?.full_name || "فلاح"}: ${post.content || "منشور فلاحي"}`;
+
+        const shareText =
+          `${profilesCache[post.user_id]?.full_name || "فلاح"}: ${post.content || "منشور فلاحي"}`;
+
         if (navigator.share) {
           try {
-            await navigator.share({title:"المجتمع الفلاحي",text:shareText});
+            await navigator.share({
+              title:"المجتمع الفلاحي",
+              text:shareText
+            });
           } catch(e) {}
         } else if (navigator.clipboard) {
           await navigator.clipboard.writeText(shareText);
@@ -1027,20 +1257,29 @@
     const feed = $("fc-feed");
     if (!feed) return;
 
-    feed.innerHTML = '<div class="fc-empty">جاري تحميل المنشورات...</div>';
+    feed.innerHTML =
+      '<div class="fc-empty">جاري تحميل المنشورات...</div>';
 
     const {data:posts,error} = await db.from("posts")
-      .select("*").order("created_at",{ascending:false}).limit(100);
+      .select("*")
+      .order("created_at",{ascending:false})
+      .limit(100);
 
     if (error) {
-      feed.innerHTML = `<div class="fc-empty">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
+      feed.innerHTML =
+        `<div class="fc-empty">تعذر تحميل المنشورات: ${esc(error.message)}</div>`;
       return;
     }
 
     allPosts = posts || [];
 
     if (!allPosts.length) {
-      feed.innerHTML = '<div class="fc-empty">🌱<br>مازال ما كاين حتى منشور.<br>كون أول واحد يشارك تجربتو!</div>';
+      allLikes = [];
+      allComments = [];
+
+      feed.innerHTML =
+        '<div class="fc-empty">🌱<br>مازال ما كاين حتى منشور.<br>كون أول واحد يشارك تجربتو!</div>';
+
       return;
     }
 
@@ -1050,37 +1289,53 @@
     await getProfiles(userIds);
 
     const [likesResult,commentsResult] = await Promise.all([
-      db.from("likes").select("post_id,user_id").in("post_id",postIds),
-      db.from("comments").select("*").in("post_id",postIds).order("created_at")
+      db.from("likes")
+        .select("post_id,user_id")
+        .in("post_id",postIds),
+
+      db.from("comments")
+        .select("*")
+        .in("post_id",postIds)
+        .order("created_at")
     ]);
 
     allLikes = likesResult.data || [];
     allComments = commentsResult.data || [];
 
-    const commentUserIds = [...new Set(allComments.map(c => c.user_id))];
-    await getProfiles(commentUserIds);
+    const commentUserIds = [
+      ...new Set(allComments.map(c => c.user_id))
+    ];
 
+    await getProfiles(commentUserIds);
     renderFeed();
   }
 
   // لوحة المدير
   function updateAdminButton() {
     let btn = $("fc-admin-button");
+
     if (!btn) {
       btn = document.createElement("button");
       btn.id = "fc-admin-button";
       btn.className = "fc-btn fc-light";
       btn.textContent = "🛡️ الإدارة";
-      btn.style.cssText = "display:block;margin:10px 12px;width:calc(100% - 24px)";
+      btn.style.cssText =
+        "display:block;margin:10px 12px;width:calc(100% - 24px)";
+
       $("fc-user").appendChild(btn);
 
       const area = $("fc-admin-area");
       area.classList.add("fc-admin");
+
       btn.onclick = async () => {
         area.classList.toggle("fc-hidden");
-        if (!area.classList.contains("fc-hidden")) await loadAdminPanel();
+
+        if (!area.classList.contains("fc-hidden")) {
+          await loadAdminPanel();
+        }
       };
     }
+
     btn.classList.toggle("fc-hidden",!isAdmin);
   }
 
@@ -1091,8 +1346,11 @@
     area.innerHTML = '<p>جاري تحميل لوحة الإدارة...</p>';
 
     const [users,posts,comments] = await Promise.all([
-      db.from("profiles").select("id,full_name,role,created_at,is_banned")
-        .order("created_at",{ascending:false}).limit(200),
+      db.from("profiles")
+        .select("id,full_name,role,created_at,is_banned")
+        .order("created_at",{ascending:false})
+        .limit(200),
+
       db.from("posts").select("id",{count:"exact",head:true}),
       db.from("comments").select("id",{count:"exact",head:true})
     ]);
@@ -1109,11 +1367,15 @@
       <div class="fc-box">📝 المنشورات: ${posts.count || 0}</div>
       <div class="fc-box">💬 التعليقات: ${comments.count || 0}</div>
       <h4>المستخدمون</h4>
+
       <div id="fc-admin-users">
         ${users.data.map(user => `
           <div class="fc-box">
             <b>${esc(user.full_name || "مستخدم")}</b>
-            <p class="fc-muted">الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}</p>
+            <p class="fc-muted">
+              الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}
+            </p>
+
             ${user.id !== currentUser.id && user.role !== "admin" ? `
               <button class="fc-btn fc-light" data-ban="${esc(user.id)}">
                 ${user.is_banned ? "إلغاء الحظر" : "حظر المستخدم"}
@@ -1122,20 +1384,28 @@
           </div>
         `).join("")}
       </div>
+
       <button class="fc-btn" id="fc-admin-refresh">تحديث البيانات</button>
     `;
 
     area.querySelectorAll("[data-ban]").forEach(btn => {
       btn.onclick = async () => {
-        const user = users.data.find(u => u.id === btn.dataset.ban);
+        const user = users.data.find(
+          u => u.id === btn.dataset.ban
+        );
+
         if (!user) return;
+
         const action = user.is_banned ? "إلغاء الحظر" : "حظر";
+
         if (!confirm(`هل تريد ${action} هذا المستخدم؟`)) return;
 
         const {error} = await db.from("profiles")
-          .update({is_banned:!user.is_banned}).eq("id",user.id);
+          .update({is_banned:!user.is_banned})
+          .eq("id",user.id);
 
         if (error) return msg(error.message);
+
         msg("تم تحديث حالة المستخدم.");
         await loadAdminPanel();
       };
