@@ -1,3 +1,4 @@
+
 // مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
 (() => {
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
