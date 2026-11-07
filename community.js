@@ -1,5 +1,8 @@
+
 // مجتمع فلاحي 2.0 — واجهة اجتماعية مستقلة
 (() => {
+  "use strict";
+
   const SUPABASE_URL = "https://kldxlodykkomkresegyt.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AOy4zEw5LYHklwYOaQGmoA_G01FCILJ";
 
@@ -17,6 +20,7 @@
     return;
   }
 
+  const $ = id => document.getElementById(id);
   const hiddenElements = [];
   const oldBack = communitySection?.querySelector('.back[data-go="home"]');
 
@@ -32,7 +36,8 @@
     el.style.display = "none";
   }
 
-  function {
+  // إصلاح تعريف الدالة التي كانت تسبب الصفحة البيضاء
+  function enterCommunityMode() {
     if (!communitySection) return;
 
     [...communitySection.children].forEach(el => {
@@ -77,8 +82,6 @@
   let allComments = [];
   let activeProfileId = null;
 
-  const $ = id => document.getElementById(id);
-
   const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({
     "&": "&amp;",
     "<": "&lt;",
@@ -102,159 +105,120 @@
   root.innerHTML = `
     <style>
       #community-app,#community{
-        direction:rtl;
-        text-align:right;
-        font-family:inherit;
-        color:#183329;
+        direction:rtl;text-align:right;font-family:inherit;color:#183329;
       }
-
       #community-app{
-        --ig-green:#176b45;
-        --ig-border:#e8eee9;
-        --ig-muted:#87938b;
-        padding-bottom:75px;
-        background:#f7faf8;
-        min-height:100vh;
-        width:100%;
-        box-sizing:border-box;
+        --ig-green:#176b45;--ig-border:#e8eee9;--ig-muted:#87938b;
+        padding-bottom:75px;background:#f7faf8;min-height:100vh;
+        width:100%;box-sizing:border-box;
       }
-
       #community-app *{box-sizing:border-box}
       .fc-hidden{display:none!important}
-
       .fc-topbar{
         position:sticky;top:0;z-index:20;background:#fff;
         border-bottom:1px solid var(--ig-border);
         display:flex;align-items:center;justify-content:space-between;
         padding:12px 14px;
       }
-
       .fc-brand{font-size:19px;font-weight:900;color:#176b45}
       .fc-top-actions{display:flex;gap:8px;align-items:center}
-
       .fc-icon-btn{
         border:0;background:#f0f5f1;border-radius:50%;
         width:39px;height:39px;font-size:19px;cursor:pointer;
       }
-
       .fc-message{
         margin:8px 12px;color:#176b45;font-size:12px;
         min-height:0;line-height:1.7;
       }
-
       .fc-auth-card,.fc-box{
         background:#fff;border:1px solid var(--ig-border);
         border-radius:15px;padding:14px;margin:12px 0;
       }
-
       .fc-auth-card h3{margin:4px 0 8px}
-
       .fc-input{
         width:100%;box-sizing:border-box;padding:12px;
         border:1px solid #dfe8e1;border-radius:10px;
         margin:6px 0;font:inherit;background:#fff;
       }
-
       .fc-btn{
         border:0;border-radius:10px;padding:10px 15px;
         background:#176b45;color:white;font:inherit;
         cursor:pointer;font-weight:700;
       }
-
       .fc-btn:disabled{opacity:.6;cursor:wait}
       .fc-light{background:#edf5ef;color:#176b45}
-
       .fc-muted{color:var(--ig-muted);font-size:12px;line-height:1.7}
       .fc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
       .fc-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
       .fc-auth-actions .fc-btn{width:100%}
-
       .fc-avatar{
-        width:43px;height:43px;border-radius:50%;
-        object-fit:cover;border:2px solid #d7eadc;flex-shrink:0;
+        width:43px;height:43px;border-radius:50%;object-fit:cover;
+        border:2px solid #d7eadc;flex-shrink:0;
       }
-
       .fc-avatar-placeholder{
         display:flex;align-items:center;justify-content:center;
         background:#e9f4ec;font-size:23px;
       }
-
       .fc-stories{
         display:flex;gap:14px;overflow-x:auto;padding:13px 12px;
         background:#fff;border-bottom:1px solid var(--ig-border);
       }
-
       .fc-story{
         flex:0 0 65px;text-align:center;cursor:pointer;
         font-size:11px;color:#526258;
       }
-
       .fc-story-ring{
         width:61px;height:61px;border-radius:50%;padding:3px;
         margin:0 auto 5px;
         background:linear-gradient(45deg,#f5a623,#d64b6b,#176b45);
       }
-
       .fc-story-ring>div{
         width:100%;height:100%;border:2px solid white;
         border-radius:50%;overflow:hidden;background:#eaf5ee;
         display:grid;place-items:center;
       }
-
       .fc-story-ring span{font-size:25px}
-
       .fc-compose{
         background:#fff;padding:13px 12px;
         border-bottom:1px solid var(--ig-border);
       }
-
       .fc-compose-top{display:flex;align-items:center;gap:10px}
-
       .fc-compose-prompt{
         flex:1;border:1px solid #e5ece7;border-radius:22px;
         padding:11px 14px;color:#849087;font-size:13px;
         background:#f8faf8;cursor:pointer;text-align:right;
       }
-
       .fc-compose-extra{display:flex;gap:9px;margin-top:11px}
-
       .fc-compose-extra button{
         flex:1;border:0;background:#f0f6f1;color:#176b45;
         border-radius:9px;padding:9px;font:inherit;font-size:12px;
       }
-
       .fc-post{
         background:#fff;border-bottom:8px solid #f1f5f2;
         padding:13px 12px;margin:0;
       }
-
       .fc-post-head{
         display:flex;align-items:center;justify-content:space-between;
         gap:8px;margin-bottom:10px;
       }
-
       .fc-author{display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0}
       .fc-author-info{min-width:0}
       .fc-author-info strong{display:block;font-size:13px;color:#1c392a}
       .fc-author-info .fc-muted{font-size:10px}
       .fc-post-menu{border:0;background:transparent;font-size:22px;color:#758078}
-
       .fc-post-text{
         font-size:14px;line-height:1.8;white-space:pre-wrap;
         overflow-wrap:anywhere;margin:8px 0 11px;
       }
-
       .fc-post-image{
         width:calc(100% + 24px);margin:0 -12px;
         max-height:520px;object-fit:cover;display:block;background:#f0f3f0;
       }
-
       .fc-post-actions{display:flex;align-items:center;gap:17px;padding:10px 0 3px}
       .fc-action{
         border:0;background:none;padding:3px 0;color:#263c2f;
         font:inherit;font-size:14px;cursor:pointer;
       }
-
       .fc-action.liked{color:#e34252}
       .fc-likes-count{font-size:12px;font-weight:800;margin-top:5px}
       .fc-comment-preview{font-size:12px;color:#58665d;margin-top:5px}
@@ -264,84 +228,64 @@
       .fc-comment-form{display:flex;gap:6px;margin-top:8px}
       .fc-comment-form input{flex:1;min-width:0;margin:0}
       .fc-comment-form button{white-space:nowrap}
-
       .fc-bottom-nav{
         position:fixed;bottom:0;left:0;right:0;z-index:30;
         background:#fff;border-top:1px solid var(--ig-border);
         display:grid;grid-template-columns:repeat(4,1fr);
         padding:8px 3px calc(8px + env(safe-area-inset-bottom));
       }
-
       .fc-bottom-nav button{
         border:0;background:none;color:#68766d;font-size:10px;
         padding:3px;cursor:pointer;
       }
-
       .fc-bottom-nav button span{display:block;font-size:21px;margin-bottom:2px}
       .fc-bottom-nav button.active{color:#176b45;font-weight:900}
-
       .fc-profile-head{
         background:#fff;border-bottom:1px solid var(--ig-border);
         padding:15px 13px;
       }
-
       .fc-profile-top{display:flex;align-items:center;gap:18px}
-
       .fc-profile-avatar{
         width:88px;height:88px;border-radius:50%;
         object-fit:cover;border:3px solid #e3efe6;
       }
-
       .fc-profile-stats{
         display:flex;justify-content:space-around;flex:1;text-align:center;
       }
-
       .fc-profile-stats strong{display:block;font-size:18px}
       .fc-profile-stats span{font-size:11px;color:#7a877e}
       .fc-profile-name{font-size:16px;font-weight:900;margin:12px 0 3px}
       .fc-profile-bio{font-size:13px;line-height:1.8;white-space:pre-wrap}
-
       .fc-profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:3px}
       .fc-grid-item{aspect-ratio:1/1;background:#edf2ee;overflow:hidden;position:relative;cursor:pointer}
       .fc-grid-item img{width:100%;height:100%;object-fit:cover}
-
-      .fc-grid-text{
-        font-size:10px;padding:7px;line-height:1.5;
-        overflow:hidden;max-height:100%;
-      }
-
+      .fc-grid-text{font-size:10px;padding:7px;line-height:1.5;overflow:hidden;max-height:100%}
       .fc-grid-count{
         position:absolute;bottom:5px;left:5px;color:white;
         background:#0009;padding:3px 6px;border-radius:8px;font-size:10px;
       }
-
       .fc-profile-tabs{
         display:flex;justify-content:center;padding:13px;
         border-bottom:1px solid var(--ig-border);
         color:#176b45;font-weight:900;font-size:13px;
       }
-
       .fc-profile-edit{
         width:100%;margin-top:12px;background:#edf5ef;color:#176b45;
         border:0;border-radius:9px;padding:9px;font:inherit;font-weight:800;
       }
-
       .fc-profile-panel{
         background:#fff;border:1px solid var(--ig-border);
         border-radius:14px;padding:14px;margin:12px 0;
       }
-
       .fc-photo-preview{
         width:100px;height:100px;border-radius:50%;
         object-fit:cover;display:block;margin:10px auto;
         border:3px solid #176b45;
       }
-
       .fc-label{display:block;font-size:12px;font-weight:800;margin-top:10px}
       .fc-empty{text-align:center;padding:35px 15px;color:#7b887f;background:#fff;font-size:13px;line-height:2}
       .fc-detail-image{width:100%;max-height:500px;object-fit:contain;background:#f0f3f0;border-radius:10px}
       .fc-admin{padding:12px;background:#fff}
-
       @media(min-width:620px){
         #community-app{max-width:650px;margin:0 auto;border-left:1px solid #e8eee9;border-right:1px solid #e8eee9}
         .fc-post{border:1px solid var(--ig-border);border-radius:14px;margin:12px 0}
@@ -374,17 +318,14 @@
       <input id="fc-email" class="fc-input" type="email" placeholder="البريد الإلكتروني">
       <input id="fc-password" class="fc-input" type="password" placeholder="كلمة المرور">
       <input id="fc-name" class="fc-input" placeholder="الاسم عند إنشاء الحساب">
-
       <div class="fc-auth-actions">
         <button class="fc-btn" id="fc-signup">إنشاء حساب</button>
         <button class="fc-btn fc-light" id="fc-login">دخول</button>
       </div>
-
       <hr style="border:0;border-top:1px solid #e8eee9;margin:15px 0">
       <p class="fc-muted">أو الدخول برقم الهاتف</p>
       <input id="fc-phone" class="fc-input" type="tel" placeholder="+2126XXXXXXXX">
       <button class="fc-btn fc-light" id="fc-send-code">إرسال رمز الهاتف</button>
-
       <div id="fc-phone-verify" class="fc-hidden">
         <input id="fc-code" class="fc-input" placeholder="رمز التحقق">
         <button class="fc-btn" id="fc-verify-code">تأكيد الرمز</button>
@@ -437,19 +378,14 @@
       <img id="fc-avatar-preview" class="fc-photo-preview"
         src="https://placehold.co/200x200/e5f2e9/176b45?text=Farmer" alt="الصورة الشخصية">
       <input id="fc-avatar-file" class="fc-input" type="file" accept="image/*">
-
       <label class="fc-label">الاسم الكامل</label>
       <input id="fc-profile-name" class="fc-input" placeholder="اسمك">
-
       <label class="fc-label">المدينة أو المنطقة</label>
       <input id="fc-profile-city" class="fc-input" placeholder="مثلاً: القنيطرة">
-
       <label class="fc-label">نبذة عنك</label>
       <textarea id="fc-profile-bio" class="fc-input" rows="3" maxlength="1000" placeholder="عرفنا على نشاطك الفلاحي..."></textarea>
-
       <label class="fc-label">المحاصيل والأشجار التي تهتم بها</label>
       <input id="fc-profile-crops" class="fc-input" placeholder="الأفوكادو، الزيتون، الحوامض...">
-
       <div class="fc-actions">
         <button class="fc-btn" id="fc-profile-save">حفظ التغييرات</button>
         <button class="fc-btn fc-light" id="fc-profile-close">إغلاق</button>
@@ -466,7 +402,7 @@
     </div>
   `;
 
-  // مهم: تشغيل وضع المجتمع وإخفاء واجهة التطبيق القديمة
+  // تشغيل وضع المجتمع بعد بناء الواجهة
   enterCommunityMode();
 
   $("fc-back-app").onclick = leaveCommunityMode;
@@ -574,7 +510,6 @@
         .eq("id",currentUser.id)
         .maybeSingle();
 
-      // إنشاء سجل الملف الشخصي إذا لم يكن موجوداً
       if (!profile && !profileError) {
         const fallbackName =
           currentUser.user_metadata?.full_name ||
@@ -611,10 +546,10 @@
         isAdmin = profile?.role === "admin";
         profilesCache[currentUser.id] = profile || {};
 
-        $("fc-profile-name").value = profile?.full_name || currentUser.user_metadata?.full_name || "";
+        $("fc-profile-name").value =
+          profile?.full_name || currentUser.user_metadata?.full_name || "";
         $("fc-profile-city").value = profile?.city || "";
         $("fc-profile-bio").value = profile?.bio || "";
-
         $("fc-profile-crops").value =
           Array.isArray(profile?.crops) ? profile.crops.join("، ") : "";
 
@@ -645,7 +580,6 @@
     const full_name = $("fc-profile-name").value.trim();
     const city = $("fc-profile-city").value.trim();
     const bio = $("fc-profile-bio").value.trim();
-
     const crops = $("fc-profile-crops").value
       .split(/[،,]/).map(x => x.trim()).filter(Boolean);
 
@@ -662,7 +596,6 @@
       if (file) {
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
-
         const path = `${currentUser.id}/avatar-${Date.now()}.${ext}`;
 
         const {error:uploadError} = await db.storage
@@ -690,7 +623,6 @@
       if (error) throw error;
 
       profilesCache[currentUser.id] = saved;
-
       await db.auth.updateUser({data:{full_name}});
 
       $("fc-avatar-file").value = "";
@@ -786,11 +718,9 @@
   // الدخول بالهاتف
   $("fc-send-code").onclick = async () => {
     const phone = $("fc-phone").value.trim();
-
     if (!phone) return msg("أدخل رقم الهاتف مع رمز الدولة.");
 
     const {error} = await db.auth.signInWithOtp({phone});
-
     if (error) return msg(error.message);
 
     phonePending = true;
@@ -838,7 +768,6 @@
 
         const ext = (file.name.split(".").pop() || "jpg")
           .replace(/[^a-zA-Z0-9]/g,"") || "jpg";
-
         const path = `${currentUser.id}/${Date.now()}.${ext}`;
 
         const {error:uploadError} = await db.storage
@@ -866,7 +795,6 @@
       msg("تم نشر منشورك بنجاح 🌱");
       await loadPosts();
       setTab("feed");
-
     } catch (e) {
       msg("تعذر النشر: " + e.message);
     } finally {
@@ -877,7 +805,7 @@
 
   // تحميل بيانات الحسابات
   async function getProfiles(ids) {
-    const missing = ids.filter(id => !profilesCache[id]);
+    const missing = ids.filter(id => id && !profilesCache[id]);
 
     if (missing.length) {
       const {data,error} = await db.from("profiles")
@@ -928,7 +856,6 @@
     if (postIds.length) {
       const result = await db.from("likes")
         .select("post_id,user_id").in("post_id",postIds);
-
       likes = result.data || [];
     }
 
@@ -942,25 +869,20 @@
           ${profile.avatar_url
             ? `<img class="fc-profile-avatar" src="${esc(profile.avatar_url)}" alt="الصورة الشخصية">`
             : `<div class="fc-avatar fc-avatar-placeholder" style="width:88px;height:88px;font-size:42px">👨‍🌾</div>`}
-
           <div class="fc-profile-stats">
             <div><strong>${userPosts.length}</strong><span>منشور</span></div>
             <div><strong>${totalLikes}</strong><span>إعجاب</span></div>
             <div><strong>${crops.length}</strong><span>اهتمام</span></div>
           </div>
         </div>
-
         <div class="fc-profile-name">${esc(profile.full_name || "فلاح")}</div>
         ${profile.city ? `<div class="fc-muted">📍 ${esc(profile.city)}</div>` : ""}
         ${profile.bio ? `<div class="fc-profile-bio">${esc(profile.bio)}</div>` : ""}
         ${crops.length ? `<div class="fc-muted" style="margin-top:7px">🌱 يهتم بـ: ${esc(crops.join("، "))}</div>` : ""}
-
         ${own ? `<button class="fc-profile-edit" id="fc-edit-own-profile">✏️ تعديل الملف الشخصي</button>` : ""}
         <button class="fc-profile-edit" id="fc-profile-back">← العودة للمنشورات</button>
       </div>
-
       <div class="fc-profile-tabs">▦ المنشورات</div>
-
       ${userPosts.length ? `
         <div class="fc-profile-grid">
           ${userPosts.map(post => `
@@ -990,13 +912,11 @@
         const post = userPosts.find(
           p => String(p.id) === item.dataset.openProfilePost
         );
-
         if (post) openPostDetail(post,profile);
       };
     });
 
     $("fc-user").classList.add("fc-hidden");
-
     window.scrollTo({top:root.offsetTop,behavior:"smooth"});
   }
 
@@ -1016,7 +936,6 @@
             </div>
           </div>
         </div>
-
         <p class="fc-post-text">${esc(post.content || "")}</p>
         ${post.image_url ? `<img class="fc-detail-image" src="${esc(post.image_url)}" alt="صورة المنشور">` : ""}
         <p class="fc-muted">${new Date(post.created_at).toLocaleString("ar")}</p>
@@ -1026,7 +945,6 @@
 
     $("fc-detail-close").onclick = () => detail.classList.add("fc-hidden");
     $("fc-detail-author").onclick = () => openProfile(profile.id);
-
     window.scrollTo({top:detail.offsetTop,behavior:"smooth"});
   }
 
@@ -1070,13 +988,10 @@
                 </span>
               </div>
             </div>
-
             ${canDelete ? `<button class="fc-post-menu" data-delete="${esc(post.id)}" title="حذف">⋯</button>` : ""}
           </div>
-
           ${post.content ? `<div class="fc-post-text">${esc(post.content)}</div>` : ""}
           ${post.image_url ? `<img class="fc-post-image" src="${esc(post.image_url)}" alt="صورة فلاحية" loading="lazy">` : ""}
-
           <div class="fc-post-actions">
             <button class="fc-action ${liked ? "liked" : ""}" data-like="${esc(post.id)}">
               ${liked ? "❤️" : "🤍"} إعجاب
@@ -1084,9 +999,7 @@
             <button class="fc-action" data-toggle-comments="${esc(post.id)}">💬 تعليق</button>
             <button class="fc-action" data-share="${esc(post.id)}">↗ مشاركة</button>
           </div>
-
           <div class="fc-likes-count">${postLikes.length} إعجاب</div>
-
           ${postComments.length ? `
             <div class="fc-comment-preview">
               ${postComments.slice(-2).map(c =>
@@ -1094,7 +1007,6 @@
               ).join("")}
             </div>
           ` : ""}
-
           <div class="fc-comments fc-hidden" id="fc-comments-${esc(post.id)}">
             ${postComments.map(c => `
               <div class="fc-comment-row">
@@ -1105,7 +1017,6 @@
                   : ""}
               </div>
             `).join("")}
-
             ${currentUser ? `
               <div class="fc-comment-form">
                 <input class="fc-input" id="fc-comment-${esc(post.id)}" placeholder="اكتب تعليقاً...">
@@ -1133,7 +1044,6 @@
         if (!currentUser) return msg("سجل الدخول أولاً.");
 
         const post_id = btn.dataset.like;
-
         const {data:existing,error:checkError} = await db.from("likes")
           .select("post_id")
           .eq("post_id",post_id)
@@ -1162,7 +1072,6 @@
 
         const post_id = btn.dataset.comment;
         const content = $(`fc-comment-${post_id}`).value.trim();
-
         if (!content) return;
 
         const {error} = await db.from("comments").insert({
@@ -1311,7 +1220,6 @@
         .select("id,full_name,role,created_at,is_banned")
         .order("created_at",{ascending:false})
         .limit(200),
-
       db.from("posts").select("id",{count:"exact",head:true}),
       db.from("comments").select("id",{count:"exact",head:true})
     ]);
@@ -1328,13 +1236,11 @@
       <div class="fc-box">📝 المنشورات: ${posts.count || 0}</div>
       <div class="fc-box">💬 التعليقات: ${comments.count || 0}</div>
       <h4>المستخدمون</h4>
-
       <div id="fc-admin-users">
         ${users.data.map(user => `
           <div class="fc-box">
             <b>${esc(user.full_name || "مستخدم")}</b>
             <p class="fc-muted">الحالة: ${user.is_banned ? "🚫 محظور" : "✅ نشيط"}</p>
-
             ${user.id !== currentUser.id && user.role !== "admin" ? `
               <button class="fc-btn fc-light" data-ban="${esc(user.id)}">
                 ${user.is_banned ? "إلغاء الحظر" : "حظر المستخدم"}
@@ -1343,7 +1249,6 @@
           </div>
         `).join("")}
       </div>
-
       <button class="fc-btn" id="fc-admin-refresh">تحديث البيانات</button>
     `;
 
@@ -1374,7 +1279,12 @@
 
   // مراقبة تسجيل الدخول والخروج
   db.auth.onAuthStateChange(() => {
-    setTimeout(() => refreshUser(),0);
+    setTimeout(() => {
+      refreshUser().catch(error => {
+        console.error("Auth refresh error:",error);
+        msg("تعذر تحديث حالة الحساب.");
+      });
+    },0);
   });
 
   // تشغيل المجتمع
