@@ -32,7 +32,7 @@
     el.style.display = "none";
   }
 
-  function enterCommunityMode() {
+  function {
     if (!communitySection) return;
 
     [...communitySection.children].forEach(el => {
