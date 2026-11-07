@@ -87,7 +87,7 @@ const db = window.supabase.createClient(
 const $ = id => document.getElementById(id);
 let user = null;
 let allAds = [];
-
+let editingAdId = null;
 function message(t) {
   $("message").textContent = t;
 }
