@@ -181,7 +181,9 @@ $("publish").onclick = async function() {
     return;
   }
 
-  let imageUrl = null;
+  let imageUrl = editingAdId
+  ? (allAds.find(a => String(a.id) === String(editingAdId))?.image_url || null)
+  : null;
 
   if (file) {
     message("جاري رفع الصورة...");
@@ -209,32 +211,56 @@ $("publish").onclick = async function() {
 
   message("جاري نشر الإعلان...");
 
-  const { error } = await db.from("market_ads").insert({
-    user_id: user.id,
-    title,
-    category,
-    description,
-    price: priceValue === "" ? null : Number(priceValue),
-    city,
-    phone,
-    image_url: imageUrl,
-    status: "active"
-  });
+  const adData = {
+  title,
+  category,
+  description,
+  price: priceValue === "" ? null : Number(priceValue),
+  city,
+  phone,
+  image_url: imageUrl,
+  status: "active"
+};
 
-  if (error) {
-    message("تعذر نشر الإعلان: " + error.message);
-    return;
-  }
+let error;
 
-  message("تم نشر الإعلان بنجاح!");
-  $("title").value = "";
-  $("description").value = "";
-  $("price").value = "";
-  $("city").value = "";
-  $("phone").value = "";
-  $("image").value = "";
+if (editingAdId) {
+  const result = await db
+    .from("market_ads")
+    .update(adData)
+    .eq("id", editingAdId)
+    .eq("user_id", user.id);
 
-  await loadAds();
+  error = result.error;
+} else {
+  const result = await db
+    .from("market_ads")
+    .insert({
+      ...adData,
+      user_id: user.id
+    });
+
+  error = result.error;
+}
+
+if (error) {
+  message("تعذر حفظ الإعلان: " + error.message);
+  return;
+}
+
+message(editingAdId ? "تم تعديل الإعلان بنجاح!" : "تم نشر الإعلان بنجاح!");
+
+editingAdId = null;
+$("publish").textContent = "نشر الإعلان";
+
+$("title").value = "";
+$("description").value = "";
+$("price").value = "";
+$("city").value = "";
+$("phone").value = "";
+$("image").value = "";
+
+await loadAds();
 };
 $("ads").onclick = async function(e) {
   const editId = e.target.getAttribute("data-edit");
@@ -243,7 +269,8 @@ $("ads").onclick = async function(e) {
   if (editId) {
     const ad = allAds.find(a => String(a.id) === editId);
     if (!ad) return;
-
+  editingAdId = ad.id;
+$("publish").textContent = "حفظ التعديل";
     $("title").value = ad.title || "";
     $("category").value = ad.category || "";
     $("description").value = ad.description || "";
