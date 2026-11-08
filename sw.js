@@ -1,5 +1,5 @@
 
-const CACHE = 'fellahi-v4';
+const CACHE = 'fellahi-v5';
 
 const FILES = [
   './',
