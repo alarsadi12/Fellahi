@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -63,8 +64,10 @@ nav b{display:block;font-size:19px}
 .drawer-link{display:flex;align-items:center;gap:11px;text-decoration:none;color:#183329;padding:12px 10px;border-radius:12px;font-size:14px;font-weight:650;border:0;background:transparent;width:100%;text-align:right}
 .drawer-link:active,.drawer-link:hover{background:#eaf5ee}
 .drawer-link span{width:28px;text-align:center;font-size:19px}
-.socials{display:flex;gap:9px;flex-wrap:wrap;padding:4px 5px}
-.socials a{width:42px;height:42px;border-radius:13px;background:#eaf5ee;display:grid;place-items:center;text-decoration:none;color:#176b45;font-size:17px;font-weight:800}
+.socials{display:flex;gap:9px;flex-wrap:wrap;padding:8px 5px}
+.socials a{width:100%;min-height:46px;border-radius:13px;background:#eaf5ee;display:flex;align-items:center;gap:12px;padding:10px 14px;text-decoration:none;color:#176b45;font-size:14px;font-weight:800;transition:.2s}
+.socials a:hover{background:#d9eee2;transform:translateX(-2px)}
+.socials .social-icon{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:#fff;font-size:17px}
 @media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -101,12 +104,16 @@ nav b{display:block;font-size:19px}
 
 <div class="drawer-label">تابع فلاحي على مواقع التواصل</div>
 <div class="socials">
-<a href="#" aria-label="Facebook" title="Facebook">f</a>
-<a href="#" aria-label="Instagram" title="Instagram">◎</a>
-<a href="#" aria-label="TikTok" title="TikTok">♪</a>
-<a href="#" aria-label="YouTube" title="YouTube">▶</a>
+<a href="https://whatsapp.com/channel/0029Vb9JHV50lwgkQI2TpP2d" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
+<span class="social-icon">🟢</span> قناة فلاحي على واتساب
+</a>
+<a href="https://www.facebook.com/profile.php?id=61596052304394" target="_blank" rel="noopener noreferrer" aria-label="فيسبوك">
+<span class="social-icon">🔵</span> صفحة فلاحي على فيسبوك
+</a>
+<a href="https://www.instagram.com/fellahi____2?psln=cjgyMTMyd3V4cWJi" target="_blank" rel="noopener noreferrer" aria-label="إنستغرام">
+<span class="social-icon">📸</span> فلاحي على إنستغرام
+</a>
 </div>
-<p class="note">روابط التواصل مؤقتة. أضف روابط صفحات فلاحي الحقيقية قبل نشر النسخة النهائية.</p>
 </aside>
 
 <header>
